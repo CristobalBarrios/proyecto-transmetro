@@ -8,10 +8,13 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -37,6 +40,15 @@ public class LineaController {
     public LineaRespuesta crear(@Valid @RequestBody LineaSolicitud solicitud) {
         Linea linea = lineas.save(new Linea(MUNICIPALIDAD_DEMOSTRACION_ID, solicitud.codigo(), solicitud.nombre()));
         return new LineaRespuesta(linea.getId(), linea.getCodigo(), linea.getNombre());
+    }
+
+    @PutMapping("/{id}")
+    public LineaRespuesta actualizar(@PathVariable Integer id, @Valid @RequestBody LineaSolicitud solicitud) {
+        Linea linea = lineas.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Línea no encontrada."));
+        linea.actualizar(solicitud.codigo(), solicitud.nombre());
+        Linea actualizada = lineas.save(linea);
+        return new LineaRespuesta(actualizada.getId(), actualizada.getCodigo(), actualizada.getNombre());
     }
 
     public record LineaSolicitud(

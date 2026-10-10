@@ -36,6 +36,11 @@ public class Linea {
         this.estado = "borrador";
     }
 
+    public void actualizar(String codigo, String nombre) {
+        this.codigo = codigo;
+        this.nombre = nombre;
+    }
+
     public Integer getId() { return id; }
     public String getCodigo() { return codigo; }
     public String getNombre() { return nombre; }
