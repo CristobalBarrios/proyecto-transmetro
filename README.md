@@ -23,6 +23,13 @@ $env:TRANSMETRO_DB_PASSWORD = "SU_CONTRASENA"
 
 Si su usuario o base de datos es diferente, configure también `TRANSMETRO_DB_USER` y `TRANSMETRO_DB_URL`.
 
+Defina además un usuario y contraseña de acceso. No tienen valores predeterminados para evitar publicar la aplicación sin protección:
+
+```powershell
+$env:APP_USERNAME = "operador"
+$env:APP_PASSWORD = "UseUnaContrasenaLargaYUnica"
+```
+
 Ejecute una sola vez los scripts originales, en este orden, sobre la base vacía:
 
 ```powershell
@@ -51,6 +58,8 @@ El repositorio incluye un `Dockerfile` que compila la aplicación con Maven y la
 TRANSMETRO_DB_URL=jdbc:postgresql://HOST:PUERTO/BASE_DE_DATOS
 TRANSMETRO_DB_USER=USUARIO
 TRANSMETRO_DB_PASSWORD=CONTRASENA
+APP_USERNAME=USUARIO_DE_ACCESO
+APP_PASSWORD=CONTRASENA_LARGA_Y_UNICA
 ```
 
-Render define la variable `PORT`; la aplicación la usa automáticamente. El acceso público actual es solo para demostración: cualquier visitante puede registrar una línea. No debe usarse como sistema municipal real sin autenticación y autorización.
+Render define la variable `PORT`; la aplicación la usa automáticamente. Todos los recursos requieren iniciar sesión y los registros usan protección CSRF. La instancia limita las conexiones HTTP y de PostgreSQL para ajustarse a una demostración pequeña. Esto reduce el riesgo de abuso accidental o de registros no autorizados, pero no sustituye la protección de red contra ataques de denegación de servicio a gran escala.
