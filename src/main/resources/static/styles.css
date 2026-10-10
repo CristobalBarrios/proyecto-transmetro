@@ -54,16 +54,16 @@ main {
 .intro .eyebrow { margin-bottom: 10px; }
 .intro > p:last-child { max-width: 580px; margin-top: 18px; color: var(--texto-suave); line-height: 1.6; }
 
-.transmetro-tabs { gap: 6px; flex-wrap: nowrap; margin: 0; overflow-x: auto; border-bottom: 2px solid var(--borde); }
+.transmetro-tabs { gap: 6px; flex-wrap: wrap; margin: 0; overflow-x: visible; border-bottom: 2px solid var(--borde); }
 .transmetro-tabs .nav-link { flex: 0 0 auto; padding: 9px 13px; border-color: var(--borde); border-radius: 0; color: var(--azul); font: inherit; font-size: .86rem; font-weight: 800; white-space: nowrap; }
 .transmetro-tabs .nav-link:hover, .transmetro-tabs .nav-link:focus-visible { border-color: var(--celeste); color: var(--azul); background: #eef7fb; outline: 2px solid #0075be33; outline-offset: -2px; }
 .transmetro-tabs .nav-link.active, .transmetro-tabs .nav-link.active:hover { border-color: var(--azul); color: white; background: var(--azul); }
 .tab-content { padding-top: 26px; }
 
-.workspace { display: grid; grid-template-columns: 1.3fr .7fr; gap: 18px; }
 .tab-content > .tab-pane:not(.active) { display: none; }
 .panel { background: white; border-top: 5px solid var(--azul); box-shadow: 0 8px 28px #172b7820; }
 .panel-heading { padding: 22px 24px 16px; }
+.panel-heading-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .panel-heading .eyebrow { margin-bottom: 5px; }
 .table-responsive { overflow-x: auto; }
 .records-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
@@ -82,8 +82,15 @@ input { min-height: 42px; padding: 9px; border: 1px solid var(--borde); font: in
 .form-actions { display: flex; gap: 10px; padding: 4px 24px 0; }
 .button { flex: 1; padding: 12px 16px; border: 0; color: white; background: var(--celeste); font: inherit; font-weight: 800; cursor: pointer; }
 .button:hover { background: var(--azul); }
+.button-add { flex: 0 0 auto; white-space: nowrap; }
 .button-secondary { color: var(--azul); background: #e8eff2; }
 .button-secondary:hover { color: white; background: var(--azul); }
+
+.transmetro-modal { border: 0; border-top: 5px solid var(--azul); border-radius: 0; box-shadow: 0 12px 40px #172b7840; }
+.transmetro-modal .modal-header { align-items: flex-start; padding: 22px 24px 16px; border-bottom-color: var(--borde); }
+.transmetro-modal .modal-body { display: grid; gap: 14px; padding: 20px 24px; }
+.transmetro-modal label { display: grid; gap: 6px; padding: 0; color: var(--texto-suave); font-size: .82rem; font-weight: 800; }
+.transmetro-modal .modal-footer { padding: 14px 24px 24px; border-top: 0; }
 
 .notice { position: fixed; right: 24px; bottom: 24px; max-width: 340px; padding: 13px 17px; color: white; background: var(--azul); box-shadow: 0 8px 28px #172b7840; opacity: 0; transform: translateY(15px); transition: .2s; }
 .notice.show { opacity: 1; transform: translateY(0); }
@@ -93,6 +100,7 @@ input { min-height: 42px; padding: 9px; border: 1px solid var(--borde); font: in
 
 @media (max-width: 720px) {
   .masthead { padding: 14px 24px; }
-  .workspace { grid-template-columns: 1fr; }
+  .panel-heading-actions { align-items: flex-start; flex-direction: column; }
+  .button-add { width: 100%; }
   .records-table th, .records-table td { padding: 12px 14px; }
 }

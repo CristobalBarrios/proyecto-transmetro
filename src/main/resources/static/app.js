@@ -108,6 +108,7 @@ document.querySelector("#linea-form").addEventListener("submit", async event => 
       body: JSON.stringify(data)
     });
     resetLineForm();
+    hideModal("linea-modal");
     showNotice(editing ? "Línea modificada correctamente." : "Línea guardada correctamente.");
     await loadLines();
   } catch (error) {
@@ -128,6 +129,7 @@ document.querySelector("#estacion-form").addEventListener("submit", async event 
       body: JSON.stringify(data)
     });
     resetStationForm();
+    hideModal("estacion-modal");
     showNotice(editing ? "Estación modificada correctamente." : "Estación guardada correctamente.");
     await loadStations();
   } catch (error) {
@@ -143,7 +145,7 @@ function editLine(line) {
   document.querySelector("#linea-form-title").textContent = "Modificar línea";
   document.querySelector("#linea-submit").textContent = "Guardar cambios";
   document.querySelector("#linea-cancel").hidden = false;
-  form.elements.codigo.focus();
+  showModal("linea-modal");
 }
 
 function resetLineForm() {
@@ -164,7 +166,7 @@ function editStation(station) {
   document.querySelector("#estacion-form-title").textContent = "Modificar estación";
   document.querySelector("#estacion-submit").textContent = "Guardar cambios";
   document.querySelector("#estacion-cancel").hidden = false;
-  form.elements.nombre.focus();
+  showModal("estacion-modal");
 }
 
 function resetStationForm() {
@@ -177,6 +179,18 @@ function resetStationForm() {
 
 document.querySelector("#linea-cancel").addEventListener("click", resetLineForm);
 document.querySelector("#estacion-cancel").addEventListener("click", resetStationForm);
+document.querySelector("#new-line").addEventListener("click", resetLineForm);
+document.querySelector("#new-station").addEventListener("click", resetStationForm);
+document.querySelector("#linea-modal").addEventListener("hidden.bs.modal", resetLineForm);
+document.querySelector("#estacion-modal").addEventListener("hidden.bs.modal", resetStationForm);
+
+function showModal(id) {
+  bootstrap.Modal.getOrCreateInstance(document.querySelector(`#${id}`)).show();
+}
+
+function hideModal(id) {
+  bootstrap.Modal.getOrCreateInstance(document.querySelector(`#${id}`)).hide();
+}
 
 tabs.forEach(tab => {
   tab.addEventListener("show.bs.tab", () => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Líneas | Transmetro</title>
+  <title>Control operativo | Transmetro</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -25,13 +25,11 @@
       </div>
     </nav>
     <div class="tab-content">
-    <section id="panel-lineas" class="tab-pane fade show active workspace" role="tabpanel" aria-labelledby="tab-lineas">
-      <div class="panel"><div class="panel-heading"><div><p class="eyebrow">Entidad</p><h3>Líneas registradas</h3></div></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Código</th><th scope="col">Nombre</th><th scope="col">Acciones</th></tr></thead><tbody id="lineas-list"></tbody></table></div></div>
-      <form id="linea-form" class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">Acción</p><h3 id="linea-form-title">Agregar línea</h3></div></div><label>Código<input name="codigo" maxlength="20" placeholder="LÍNEA-02" required></label><label>Nombre<input name="nombre" maxlength="120" placeholder="Nombre de la línea" required></label><div class="form-actions"><button id="linea-submit" class="button">Guardar línea</button><button id="linea-cancel" class="button button-secondary" type="button" hidden>Cancelar</button></div></form>
+    <section id="panel-lineas" class="tab-pane fade show active" role="tabpanel" aria-labelledby="tab-lineas">
+      <div class="panel"><div class="panel-heading panel-heading-actions"><div><p class="eyebrow">Entidad</p><h3>Líneas registradas</h3></div><button id="new-line" class="button button-add" type="button" data-bs-toggle="modal" data-bs-target="#linea-modal">Nueva línea</button></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Código</th><th scope="col">Nombre</th><th scope="col">Acciones</th></tr></thead><tbody id="lineas-list"></tbody></table></div></div>
     </section>
-    <section id="panel-estaciones" class="tab-pane fade workspace" role="tabpanel" aria-labelledby="tab-estaciones">
-      <div class="panel"><div class="panel-heading"><div><p class="eyebrow">Entidad</p><h3>Estaciones registradas</h3></div></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Nombre</th><th scope="col">Dirección</th><th scope="col">Zona</th><th scope="col">Código de ruta</th><th scope="col">Acciones</th></tr></thead><tbody id="estaciones-list"></tbody></table></div></div>
-      <form id="estacion-form" class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">Acción</p><h3 id="estacion-form-title">Agregar estación</h3></div></div><label>Nombre<input name="nombre" maxlength="120" placeholder="Estación Central" required></label><label>Dirección<input name="direccion" maxlength="250" placeholder="Dirección de la estación" required></label><label>Zona<input name="zona" type="number" min="1" placeholder="1" required></label><label>Código de ruta<input name="codigoRuta" maxlength="30" placeholder="LÍNEA-02-A" required></label><div class="form-actions"><button id="estacion-submit" class="button">Guardar estación</button><button id="estacion-cancel" class="button button-secondary" type="button" hidden>Cancelar</button></div></form>
+    <section id="panel-estaciones" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-estaciones">
+      <div class="panel"><div class="panel-heading panel-heading-actions"><div><p class="eyebrow">Entidad</p><h3>Estaciones registradas</h3></div><button id="new-station" class="button button-add" type="button" data-bs-toggle="modal" data-bs-target="#estacion-modal">Nueva estación</button></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Nombre</th><th scope="col">Dirección</th><th scope="col">Zona</th><th scope="col">Código de ruta</th><th scope="col">Acciones</th></tr></thead><tbody id="estaciones-list"></tbody></table></div></div>
     </section>
     <section id="panel-pendiente" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-flota">
       <div class="panel planned-panel">
@@ -42,6 +40,28 @@
     </section>
     </div>
   </main>
+  <div class="modal fade" id="linea-modal" tabindex="-1" aria-labelledby="linea-form-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content transmetro-modal">
+        <form id="linea-form" class="modal-form">
+          <div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="linea-form-title">Agregar línea</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+          <div class="modal-body"><label>Código<input name="codigo" maxlength="20" placeholder="LÍNEA-02" required></label><label>Nombre<input name="nombre" maxlength="120" placeholder="Nombre de la línea" required></label></div>
+          <div class="modal-footer form-actions"><button id="linea-cancel" class="button button-secondary" type="button" data-bs-dismiss="modal" hidden>Cancelar</button><button id="linea-submit" class="button">Guardar línea</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="estacion-modal" tabindex="-1" aria-labelledby="estacion-form-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content transmetro-modal">
+        <form id="estacion-form" class="modal-form">
+          <div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="estacion-form-title">Agregar estación</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+          <div class="modal-body"><label>Nombre<input name="nombre" maxlength="120" placeholder="Estación Central" required></label><label>Dirección<input name="direccion" maxlength="250" placeholder="Dirección de la estación" required></label><label>Zona<input name="zona" type="number" min="1" placeholder="1" required></label><label>Código de ruta<input name="codigoRuta" maxlength="30" placeholder="LÍNEA-02-A" required></label></div>
+          <div class="modal-footer form-actions"><button id="estacion-cancel" class="button button-secondary" type="button" data-bs-dismiss="modal" hidden>Cancelar</button><button id="estacion-submit" class="button">Guardar estación</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
   <p id="notice" class="notice" role="status"></p>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="app.js"></script>
