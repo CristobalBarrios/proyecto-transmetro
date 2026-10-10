@@ -18,8 +18,14 @@ Preparar una demostración web mínima con Java 21, Spring Boot y PostgreSQL. La
 3. Confirmar que se muestra la línea `DEMO-1`.
 4. Registrar una nueva línea y comprobar que aparece en la lista.
 
+## Despliegue de demostración
+
+1. Compilar y ejecutar la aplicación con el `Dockerfile` incluido.
+2. Configurar en Render el puerto asignado y las credenciales de PostgreSQL mediante variables de entorno.
+3. Cargar el esquema y los datos de demostración antes de publicar el servicio.
+
 ## Fuera de alcance
 
 - Estaciones, accesos, parqueos, buses, personal, seguridad, recorridos, alertas y eventos.
 - Inicio de sesión, roles, bitácora, reportes, mapas, GPS e integraciones externas.
-- Arquitectura distribuida, despliegue público y características de producción.
+- Arquitectura distribuida y características de producción, como autenticación, roles y monitoreo.

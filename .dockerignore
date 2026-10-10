@@ -1,0 +1,12 @@
+.git
+.idea
+target
+out
+*.iml
+*.log
+.env
+.env.*
+application-local.properties
+application-dev.properties
+README.md
+PLAN_DESARROLLO.md
