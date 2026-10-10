@@ -2,28 +2,25 @@
 
 ## Entrega actual
 
-Preparar una demostración web mínima con Java 21, Spring Boot y PostgreSQL. La demostración administra líneas y estaciones de Transmetro.
+Preparar una demostración web con Java 21, Spring Boot y PostgreSQL. La demostración administra los catálogos base de Transmetro.
 
 ## Alcance
 
-1. Mostrar las líneas existentes en la tabla `linea`.
-2. Agregar una línea mediante código y nombre.
-3. Asociar cada nuevo registro a la municipalidad de demostración incluida en los scripts de la fase 4.
-4. Mantener la estructura y los datos definidos en `10_Script_Base_de_Datos.sql` y `10a_Datos_Demostracion.sql` sin modificarlos.
-5. Requerir un usuario y contraseña configurados como variables de entorno antes de consultar o registrar líneas.
-6. Mostrar y agregar estaciones con nombre, dirección, zona y código de ruta.
-7. Presentar mediante pestañas los módulos previstos, agrupando las entidades futuras por dominio sin implementar aún sus operaciones.
-8. Permitir modificar las líneas y estaciones registradas.
+1. Administrar municipalidades, líneas, estaciones, parqueos, buses, pilotos, guardias y accesos.
+2. Seleccionar las referencias directas requeridas para cada catálogo, como municipalidad, estación, línea o parqueo.
+3. Mantener la estructura y los datos definidos en `10_Script_Base_de_Datos.sql` y `10a_Datos_Demostracion.sql` sin modificarlos.
+4. Requerir un usuario y contraseña configurados como variables de entorno antes de consultar o registrar información.
+5. Mostrar los registros en tablas y crear o modificar datos desde formularios modales.
+6. Presentar una pantalla de inicio de sesión propia con opción para mostrar u ocultar la contraseña.
 
 ## Verificación
 
 1. Cargar los scripts de base de datos en PostgreSQL.
 2. Iniciar la aplicación con Java 21.
-3. Confirmar que se muestra la línea `DEMO-1`.
-4. Registrar una nueva línea y comprobar que aparece en la lista.
-5. Confirmar que una solicitud sin iniciar sesión se redirige al formulario de acceso.
-6. Registrar una estación y comprobar que aparece en la lista.
-7. Modificar una línea y una estación desde sus respectivas pestañas.
+3. Confirmar que se muestran los datos de demostración de líneas y estaciones.
+4. Registrar y modificar un registro de cada catálogo disponible.
+5. Confirmar que una solicitud sin iniciar sesión se redirige al formulario de acceso personalizado.
+6. Confirmar que las listas desplegables muestran las referencias registradas.
 
 ## Despliegue de demostración
 
@@ -33,6 +30,6 @@ Preparar una demostración web mínima con Java 21, Spring Boot y PostgreSQL. La
 
 ## Fuera de alcance
 
-- Accesos, parqueos, buses, personal, seguridad, recorridos, alertas y eventos.
-- Inicio de sesión, roles, bitácora, reportes, mapas, GPS e integraciones externas.
+- Educación de pilotos, asignaciones de guardias, relación línea-estación, recorridos, visitas, alertas, eventos y bitácora.
+- Usuarios internos, roles, reportes, mapas, GPS e integraciones externas.
 - Arquitectura distribuida y características de producción, como autenticación, roles y monitoreo.

@@ -3,7 +3,6 @@ package gt.muniguate.transmetro.operativo.configuracion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,8 +19,12 @@ public class SeguridadConfiguracion {
     @Bean
     SecurityFilterChain filtroDeSeguridad(HttpSecurity http) throws Exception {
         return http
-                .authorizeHttpRequests(autorizacion -> autorizacion.anyRequest().authenticated())
-                .formLogin(Customizer.withDefaults())
+                .authorizeHttpRequests(autorizacion -> autorizacion
+                        .requestMatchers("/login", "/login.html", "/login.js", "/styles.css", "/transmetro-logo.png", "/api/csrf")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
+                .formLogin(formulario -> formulario.loginPage("/login").permitAll())
                 .csrf(csrf -> csrf.csrfTokenRepository(new HttpSessionCsrfTokenRepository()))
                 .build();
     }

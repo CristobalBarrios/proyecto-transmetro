@@ -8,59 +8,62 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="masthead">
-    <img class="transmetro-logo" src="transmetro-logo.png" alt="Transmetro Ciudad de Guatemala">
+  <header class="topbar">
+    <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menú" aria-controls="app-sidebar" aria-expanded="false"><span></span><span></span><span></span></button>
+    <img class="topbar-logo" src="transmetro-logo.png" alt="Transmetro Ciudad de Guatemala">
+    <div class="topbar-context"><p class="eyebrow">Municipalidad de Guatemala</p><strong>Sistema de control operativo</strong></div>
+    <p class="session-status">Sesión protegida</p>
   </header>
-  <main>
-    <section class="intro"><p class="eyebrow">Demostración funcional</p><h2>Control operativo.</h2><p>Consulte y registre líneas y estaciones. Las demás entidades se presentan como módulos previstos del sistema.</p></section>
-    <nav aria-label="Módulos del sistema">
-      <div class="nav nav-tabs transmetro-tabs" id="module-tabs" role="tablist">
-        <button class="nav-link active" id="tab-lineas" data-bs-toggle="tab" data-bs-target="#panel-lineas" type="button" role="tab" aria-controls="panel-lineas" aria-selected="true">Líneas</button>
-        <button class="nav-link" id="tab-estaciones" data-bs-toggle="tab" data-bs-target="#panel-estaciones" type="button" role="tab" aria-controls="panel-estaciones" aria-selected="false">Estaciones</button>
-        <button class="nav-link" id="tab-flota" data-bs-toggle="tab" data-bs-target="#panel-pendiente" type="button" role="tab" aria-controls="panel-pendiente" aria-selected="false" data-title="Flota y parqueos" data-description="Módulo previsto para administrar buses, capacidad, estado operativo, parqueos y sus asignaciones.">Flota y parqueos</button>
-        <button class="nav-link" id="tab-personal" data-bs-toggle="tab" data-bs-target="#panel-pendiente" type="button" role="tab" aria-controls="panel-pendiente" aria-selected="false" data-title="Personal" data-description="Módulo previsto para registrar pilotos y su información académica.">Personal</button>
-        <button class="nav-link" id="tab-seguridad" data-bs-toggle="tab" data-bs-target="#panel-pendiente" type="button" role="tab" aria-controls="panel-pendiente" aria-selected="false" data-title="Seguridad y accesos" data-description="Módulo previsto para gestionar accesos, guardias y asignaciones de vigilancia.">Seguridad y accesos</button>
-        <button class="nav-link" id="tab-operacion" data-bs-toggle="tab" data-bs-target="#panel-pendiente" type="button" role="tab" aria-controls="panel-pendiente" aria-selected="false" data-title="Operación" data-description="Módulo previsto para la asignación línea-estación, recorridos, visitas, alertas y eventos operativos.">Operación</button>
-        <button class="nav-link" id="tab-administracion" data-bs-toggle="tab" data-bs-target="#panel-pendiente" type="button" role="tab" aria-controls="panel-pendiente" aria-selected="false" data-title="Administración" data-description="Módulo previsto para municipalidades, usuarios y consulta de bitácora.">Administración</button>
-      </div>
+  <div class="app-layout">
+    <aside id="app-sidebar" class="sidebar" aria-label="Navegación principal">
+      <nav id="app-navigation" class="side-navigation">
+        <a href="#/inicio" data-route="inicio" class="side-link">Inicio</a>
+        <section class="nav-group" data-group="red">
+          <button class="nav-group-toggle" type="button" aria-expanded="true">Red <span aria-hidden="true"></span></button>
+          <div class="nav-group-items"><a href="#/red/lineas" data-route="red/lineas" class="side-link">Líneas</a><a href="#/red/estaciones" data-route="red/estaciones" class="side-link">Estaciones</a></div>
+        </section>
+        <section class="nav-group" data-group="flota">
+          <button class="nav-group-toggle" type="button" aria-expanded="true">Flota <span aria-hidden="true"></span></button>
+          <div class="nav-group-items"><a href="#/flota/parqueos" data-route="flota/parqueos" class="side-link">Parqueos</a><a href="#/flota/buses" data-route="flota/buses" class="side-link">Buses</a></div>
+        </section>
+        <section class="nav-group" data-group="personal">
+          <button class="nav-group-toggle" type="button" aria-expanded="true">Personal <span aria-hidden="true"></span></button>
+          <div class="nav-group-items"><a href="#/personal/pilotos" data-route="personal/pilotos" class="side-link">Pilotos</a></div>
+        </section>
+        <section class="nav-group" data-group="seguridad">
+          <button class="nav-group-toggle" type="button" aria-expanded="true">Seguridad <span aria-hidden="true"></span></button>
+          <div class="nav-group-items"><a href="#/seguridad/accesos" data-route="seguridad/accesos" class="side-link">Accesos</a><a href="#/seguridad/guardias" data-route="seguridad/guardias" class="side-link">Guardias</a></div>
+        </section>
+        <section class="nav-group" data-group="administracion">
+          <button class="nav-group-toggle" type="button" aria-expanded="true">Administración <span aria-hidden="true"></span></button>
+          <div class="nav-group-items"><a href="#/administracion/municipalidades" data-route="administracion/municipalidades" class="side-link">Municipalidades</a></div>
+        </section>
+        <a href="#/operacion" data-route="operacion" class="side-link">Operación</a>
+      </nav>
+    </aside>
+    <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Cerrar menú"></button>
+    <main class="app-main">
+      <header class="view-header"><p id="view-breadcrumb" class="eyebrow">Inicio</p><h1 id="view-title">Inicio</h1></header>
+      <div class="view-content">
+      <section id="panel-inicio" class="view-panel" data-view="inicio"><div class="welcome-panel"><p class="eyebrow">Vista general</p><h2>Control operativo de Transmetro</h2><p>Seleccione una entidad en el menú para consultar, registrar o modificar información.</p><div id="summary-cards" class="summary-cards"></div></div></section>
+      <section id="panel-lineas" class="view-panel" data-view="red/lineas"><div id="lineas-content" class="module-grid"></div></section>
+      <section id="panel-estaciones" class="view-panel" data-view="red/estaciones"><div id="estaciones-content" class="module-grid"></div></section>
+      <section id="panel-flota" class="view-panel" data-view="flota/parqueos"><div id="parqueos-content" class="module-grid"></div></section>
+      <section id="panel-buses" class="view-panel" data-view="flota/buses"><div id="buses-content" class="module-grid"></div></section>
+      <section id="panel-personal" class="view-panel" data-view="personal/pilotos"><div id="pilotos-content" class="module-grid"></div></section>
+      <section id="panel-seguridad" class="view-panel" data-view="seguridad/accesos"><div id="accesos-content" class="module-grid"></div></section>
+      <section id="panel-guardias" class="view-panel" data-view="seguridad/guardias"><div id="guardias-content" class="module-grid"></div></section>
+      <section id="panel-administracion" class="view-panel" data-view="administracion/municipalidades"><div id="municipalidades-content" class="module-grid"></div></section>
+      <section id="panel-pendiente" class="view-panel" data-view="operacion">
+        <div class="panel planned-panel">
+          <div class="panel-heading"><p class="eyebrow">Siguiente etapa</p><h3>Operación</h3></div>
+          <p class="planned-description">Los recorridos, visitas, alertas y eventos requieren validaciones entre varias entidades y no se administran desde formularios directos.</p>
+          <p class="planned-note">Los catálogos necesarios para preparar esa etapa ya se pueden registrar en las demás secciones.</p>
+        </div>
+      </section>
     </nav>
-    <div class="tab-content">
-    <section id="panel-lineas" class="tab-pane fade show active" role="tabpanel" aria-labelledby="tab-lineas">
-      <div class="panel"><div class="panel-heading panel-heading-actions"><div><p class="eyebrow">Entidad</p><h3>Líneas registradas</h3></div><button id="new-line" class="button button-add" type="button" data-bs-toggle="modal" data-bs-target="#linea-modal">Nueva línea</button></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Código</th><th scope="col">Nombre</th><th scope="col">Acciones</th></tr></thead><tbody id="lineas-list"></tbody></table></div></div>
-    </section>
-    <section id="panel-estaciones" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-estaciones">
-      <div class="panel"><div class="panel-heading panel-heading-actions"><div><p class="eyebrow">Entidad</p><h3>Estaciones registradas</h3></div><button id="new-station" class="button button-add" type="button" data-bs-toggle="modal" data-bs-target="#estacion-modal">Nueva estación</button></div><div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Nombre</th><th scope="col">Dirección</th><th scope="col">Zona</th><th scope="col">Código de ruta</th><th scope="col">Acciones</th></tr></thead><tbody id="estaciones-list"></tbody></table></div></div>
-    </section>
-    <section id="panel-pendiente" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-flota">
-      <div class="panel planned-panel">
-        <div class="panel-heading"><p class="eyebrow">Módulo previsto</p><h3 id="planned-title">Entidad pendiente</h3></div>
-        <p id="planned-description" class="planned-description"></p>
-        <p class="planned-note">Este módulo está incluido en el modelo y la navegación, pero no forma parte de la funcionalidad implementada en esta etapa.</p>
       </div>
-    </section>
-    </div>
-  </main>
-  <div class="modal fade" id="linea-modal" tabindex="-1" aria-labelledby="linea-form-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content transmetro-modal">
-        <form id="linea-form" class="modal-form">
-          <div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="linea-form-title">Agregar línea</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-          <div class="modal-body"><label>Código<input name="codigo" maxlength="20" placeholder="LÍNEA-02" required></label><label>Nombre<input name="nombre" maxlength="120" placeholder="Nombre de la línea" required></label></div>
-          <div class="modal-footer form-actions"><button id="linea-cancel" class="button button-secondary" type="button" data-bs-dismiss="modal" hidden>Cancelar</button><button id="linea-submit" class="button">Guardar línea</button></div>
-        </form>
-      </div>
-    </div>
-  </div>
-  <div class="modal fade" id="estacion-modal" tabindex="-1" aria-labelledby="estacion-form-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content transmetro-modal">
-        <form id="estacion-form" class="modal-form">
-          <div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="estacion-form-title">Agregar estación</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-          <div class="modal-body"><label>Nombre<input name="nombre" maxlength="120" placeholder="Estación Central" required></label><label>Dirección<input name="direccion" maxlength="250" placeholder="Dirección de la estación" required></label><label>Zona<input name="zona" type="number" min="1" placeholder="1" required></label><label>Código de ruta<input name="codigoRuta" maxlength="30" placeholder="LÍNEA-02-A" required></label></div>
-          <div class="modal-footer form-actions"><button id="estacion-cancel" class="button button-secondary" type="button" data-bs-dismiss="modal" hidden>Cancelar</button><button id="estacion-submit" class="button">Guardar estación</button></div>
-        </form>
-      </div>
-    </div>
+    </main>
   </div>
   <p id="notice" class="notice" role="status"></p>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

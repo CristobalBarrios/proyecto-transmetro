@@ -40,7 +40,8 @@ public class Estacion {
         this.codigoRuta = codigoRuta;
     }
 
-    public void actualizar(String nombre, String direccion, short zona, String codigoRuta) {
+    public void actualizar(Integer municipalidadId, String nombre, String direccion, short zona, String codigoRuta) {
+        this.municipalidadId = municipalidadId;
         this.nombre = nombre;
         this.direccion = direccion;
         this.zona = zona;
@@ -48,6 +49,7 @@ public class Estacion {
     }
 
     public Integer getId() { return id; }
+    public Integer getMunicipalidadId() { return municipalidadId; }
     public String getNombre() { return nombre; }
     public String getDireccion() { return direccion; }
     public short getZona() { return zona; }

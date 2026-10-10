@@ -1,15 +1,14 @@
 # Sistema de control operativo para Transmetro
 
-Demostración web mínima para registrar líneas y estaciones de Transmetro. Usa sin modificaciones el modelo relacional aprobado el 26 de septiembre de 2026.
+Demostración web para administrar catálogos base de Transmetro. Usa sin modificaciones el modelo relacional aprobado el 26 de septiembre de 2026.
 
 ## Alcance de esta entrega
 
-- Ver líneas registradas.
-- Agregar una línea a la municipalidad de demostración creada por el script de datos.
-- Modificar una línea existente.
-- Ver estaciones registradas.
-- Agregar una estación a la municipalidad de demostración.
-- Modificar una estación existente.
+- Ver, agregar y modificar municipalidades, líneas y estaciones.
+- Ver, agregar y modificar parqueos y buses.
+- Ver, agregar y modificar pilotos, guardias y accesos.
+- Seleccionar las referencias directas necesarias desde listas desplegables.
+- Iniciar sesión desde una pantalla propia que permite mostrar u ocultar la contraseña.
 
 ## Requisitos
 

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio de sesión | Transmetro</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-page">
+  <main class="login-card" aria-labelledby="login-title">
+    <header class="login-brand">
+      <img class="transmetro-logo" src="transmetro-logo.png" alt="Transmetro Ciudad de Guatemala">
+      <p class="eyebrow">Control operativo</p>
+      <h1 id="login-title">Iniciar sesión</h1>
+    </header>
+    <form id="login-form" class="login-form" action="/login" method="post">
+      <input id="csrf-token" type="hidden">
+      <label>Usuario<input name="username" autocomplete="username" required autofocus></label>
+      <label>Contraseña<span class="password-control"><input id="password" name="password" type="password" autocomplete="current-password" required><button id="password-toggle" class="password-toggle" type="button" aria-controls="password" aria-pressed="false">Mostrar</button></span></label>
+      <p id="login-message" class="login-message" role="alert" aria-live="polite"></p>
+      <button class="button" type="submit">Ingresar</button>
+    </form>
+  </main>
+  <script src="login.js"></script>
+</body>
+</html>

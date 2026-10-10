@@ -9,9 +9,9 @@ public class TokenCsrfController {
 
     @GetMapping("/api/csrf")
     public TokenCsrfRespuesta obtenerToken(CsrfToken token) {
-        return new TokenCsrfRespuesta(token.getHeaderName(), token.getToken());
+        return new TokenCsrfRespuesta(token.getHeaderName(), token.getParameterName(), token.getToken());
     }
 
-    public record TokenCsrfRespuesta(String encabezado, String valor) {
+    public record TokenCsrfRespuesta(String encabezado, String parametro, String valor) {
     }
 }
