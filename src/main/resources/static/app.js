@@ -1,16 +1,28 @@
 const notice = document.querySelector("#notice");
 let csrfToken;
 const recordsByKey = {};
+const routes = {
+  inicio: { title: "Inicio", breadcrumb: "Inicio" },
+  "red/lineas": { title: "Líneas", breadcrumb: "Red / Líneas" },
+  "red/estaciones": { title: "Estaciones", breadcrumb: "Red / Estaciones" },
+  "flota/parqueos": { title: "Parqueos", breadcrumb: "Flota / Parqueos" },
+  "flota/buses": { title: "Buses", breadcrumb: "Flota / Buses" },
+  "personal/pilotos": { title: "Pilotos", breadcrumb: "Personal / Pilotos" },
+  "seguridad/accesos": { title: "Accesos", breadcrumb: "Seguridad / Accesos" },
+  "seguridad/guardias": { title: "Guardias", breadcrumb: "Seguridad / Guardias" },
+  "administracion/municipalidades": { title: "Municipalidades", breadcrumb: "Administración / Municipalidades" },
+  operacion: { title: "Operación", breadcrumb: "Operación" }
+};
 
 const resources = [
   {
-    key: "municipalidades", endpoint: "/api/municipalidades", container: "#administracion-content",
+    key: "municipalidades", endpoint: "/api/municipalidades", container: "#municipalidades-content", route: "administracion/municipalidades", icon: "account_balance",
     title: "Municipalidades registradas", singular: "municipalidad", newLabel: "Nueva municipalidad",
     columns: [{ label: "Nombre", value: record => record.nombre }],
     fields: [{ name: "nombre", label: "Nombre", required: true, maxLength: 120, placeholder: "Municipalidad de Guatemala" }]
   },
   {
-    key: "lineas", endpoint: "/api/lineas", container: "#lineas-content",
+    key: "lineas", endpoint: "/api/lineas", container: "#lineas-content", route: "red/lineas", icon: "alt_route",
     title: "Líneas registradas", singular: "línea", newLabel: "Nueva línea",
     columns: [
       { label: "Código", value: record => record.codigo },
@@ -24,7 +36,7 @@ const resources = [
     ]
   },
   {
-    key: "estaciones", endpoint: "/api/estaciones", container: "#estaciones-content",
+    key: "estaciones", endpoint: "/api/estaciones", container: "#estaciones-content", route: "red/estaciones", icon: "location_on",
     title: "Estaciones registradas", singular: "estación", newLabel: "Nueva estación",
     columns: [
       { label: "Nombre", value: record => record.nombre },
@@ -42,7 +54,7 @@ const resources = [
     ]
   },
   {
-    key: "parqueos", endpoint: "/api/parqueos", container: "#flota-content",
+    key: "parqueos", endpoint: "/api/parqueos", container: "#parqueos-content", route: "flota/parqueos", icon: "local_parking",
     title: "Parqueos registrados", singular: "parqueo", newLabel: "Nuevo parqueo",
     columns: [
       { label: "Nombre", value: record => record.nombre },
@@ -54,7 +66,7 @@ const resources = [
     ]
   },
   {
-    key: "buses", endpoint: "/api/buses", container: "#flota-content",
+    key: "buses", endpoint: "/api/buses", container: "#buses-content", route: "flota/buses", icon: "directions_bus",
     title: "Buses registrados", singular: "bus", newLabel: "Nuevo bus",
     columns: [
       { label: "Placa", value: record => record.placa },
@@ -72,7 +84,7 @@ const resources = [
     ]
   },
   {
-    key: "pilotos", endpoint: "/api/pilotos", container: "#personal-content",
+    key: "pilotos", endpoint: "/api/pilotos", container: "#pilotos-content", route: "personal/pilotos", icon: "person",
     title: "Pilotos registrados", singular: "piloto", newLabel: "Nuevo piloto",
     columns: [
       { label: "Nombre", value: record => record.nombre },
@@ -88,7 +100,7 @@ const resources = [
     ]
   },
   {
-    key: "accesos", endpoint: "/api/accesos", container: "#seguridad-content",
+    key: "accesos", endpoint: "/api/accesos", container: "#accesos-content", route: "seguridad/accesos", icon: "meeting_room",
     title: "Accesos registrados", singular: "acceso", newLabel: "Nuevo acceso",
     columns: [
       { label: "Código", value: record => record.codigo },
@@ -102,7 +114,7 @@ const resources = [
     ]
   },
   {
-    key: "guardias", endpoint: "/api/guardias", container: "#seguridad-content",
+    key: "guardias", endpoint: "/api/guardias", container: "#guardias-content", route: "seguridad/guardias", icon: "shield_person",
     title: "Guardias registrados", singular: "guardia", newLabel: "Nuevo guardia",
     columns: [
       { label: "Nombre", value: record => record.nombre },
@@ -158,7 +170,7 @@ function createPanel(resource) {
   const heading = document.createElement("div");
   heading.className = "panel-heading panel-heading-actions";
   const titleContainer = document.createElement("div");
-  titleContainer.innerHTML = `<p class="eyebrow">Entidad</p><h3>${resource.title}</h3>`;
+  titleContainer.innerHTML = `<p class="eyebrow">Entidad</p><h3><span class="material-symbols-outlined" aria-hidden="true">${resource.icon}</span>${resource.title}</h3>`;
   const button = document.createElement("button");
   button.className = "button button-add";
   button.type = "button";
@@ -223,9 +235,30 @@ async function loadAll() {
     responses.forEach(([key, records]) => { recordsByKey[key] = records; });
     populateSelects();
     resources.forEach(renderResource);
+    renderDashboard();
   } catch (error) {
     showNotice(`No se pudieron cargar los registros: ${error.message}`, true);
   }
+}
+
+function renderDashboard() {
+  const container = document.querySelector("#summary-cards");
+  container.replaceChildren();
+  resources.forEach(resource => {
+    const card = document.createElement("a");
+    card.className = "summary-card";
+    card.href = `#/${resource.route}`;
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = resource.icon;
+    const count = document.createElement("strong");
+    count.textContent = String((recordsByKey[resource.key] || []).length);
+    const label = document.createElement("span");
+    label.textContent = resource.title.replace(" registrados", "").replace(" registradas", "");
+    card.append(icon, count, label);
+    container.append(card);
+  });
 }
 
 function populateSelects() {
@@ -348,5 +381,64 @@ async function saveResource(event, resource) {
   }
 }
 
+function currentRoute() {
+  const value = window.location.hash.replace(/^#\//, "");
+  return routes[value] ? value : "inicio";
+}
+
+function closeNavigation() {
+  document.body.classList.remove("sidebar-open");
+  const toggle = document.querySelector("#menu-toggle");
+  toggle.setAttribute("aria-expanded", "false");
+}
+
+function showRoute() {
+  const route = currentRoute();
+  document.querySelectorAll("[data-view]").forEach(panel => {
+    panel.hidden = panel.dataset.view !== route;
+  });
+  document.querySelectorAll("[data-route]").forEach(link => {
+    const active = link.dataset.route === route;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+  const metadata = routes[route];
+  document.querySelector("#view-title").textContent = metadata.title;
+  document.querySelector("#view-breadcrumb").textContent = metadata.breadcrumb;
+  document.title = `${metadata.title} | Control operativo Transmetro`;
+  const activeLink = document.querySelector(`[data-route="${route}"]`);
+  const group = activeLink?.closest(".nav-group");
+  if (group) {
+    group.classList.remove("is-collapsed");
+    group.querySelector(".nav-group-toggle").setAttribute("aria-expanded", "true");
+  }
+  closeNavigation();
+}
+
+function configureNavigation() {
+  const toggle = document.querySelector("#menu-toggle");
+  toggle.addEventListener("click", () => {
+    const isOpen = document.body.classList.toggle("sidebar-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+  document.querySelector("#sidebar-backdrop").addEventListener("click", closeNavigation);
+  document.querySelectorAll(".nav-group-toggle").forEach(button => {
+    button.addEventListener("click", () => {
+      const group = button.closest(".nav-group");
+      const collapsed = group.classList.toggle("is-collapsed");
+      button.setAttribute("aria-expanded", String(!collapsed));
+    });
+  });
+  window.addEventListener("hashchange", showRoute);
+  const requestedRoute = window.location.hash.replace(/^#\//, "");
+  if (!routes[requestedRoute]) {
+    window.location.hash = "#/inicio";
+  } else {
+    showRoute();
+  }
+}
+
 createInterfaces();
+configureNavigation();
 loadAll();
