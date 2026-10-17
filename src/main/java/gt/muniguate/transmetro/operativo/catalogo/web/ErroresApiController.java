@@ -11,6 +11,13 @@ import java.util.Map;
 @RestControllerAdvice
 public class ErroresApiController {
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public org.springframework.http.ResponseEntity<Map<String, String>> reglaDeNegocio(
+            org.springframework.web.server.ResponseStatusException error) {
+        return org.springframework.http.ResponseEntity.status(error.getStatusCode())
+                .body(Map.of("message", error.getReason() == null ? "No fue posible completar la operación." : error.getReason()));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> conflictoDeDatos() {

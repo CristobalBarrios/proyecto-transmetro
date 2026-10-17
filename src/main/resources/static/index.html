@@ -21,7 +21,7 @@
         <a href="#/inicio" data-route="inicio" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span>Inicio</a>
         <section class="nav-group" data-group="red">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">route</span>Red</span><span class="nav-chevron" aria-hidden="true"></span></button>
-          <div class="nav-group-items"><a href="#/red/lineas" data-route="red/lineas" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">alt_route</span>Líneas</a><a href="#/red/estaciones" data-route="red/estaciones" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>Estaciones</a></div>
+          <div class="nav-group-items"><a href="#/red/lineas" data-route="red/lineas" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">alt_route</span>Líneas</a><a href="#/red/estaciones" data-route="red/estaciones" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>Estaciones</a><a href="#/red/rutas" data-route="red/rutas" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">route</span>Rutas de líneas</a></div>
         </section>
         <section class="nav-group" data-group="flota">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">directions_bus</span>Flota</span><span class="nav-chevron" aria-hidden="true"></span></button>
@@ -29,7 +29,7 @@
         </section>
         <section class="nav-group" data-group="personal">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">badge</span>Personal</span><span class="nav-chevron" aria-hidden="true"></span></button>
-          <div class="nav-group-items"><a href="#/personal/pilotos" data-route="personal/pilotos" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">person</span>Pilotos</a></div>
+          <div class="nav-group-items"><a href="#/personal/pilotos" data-route="personal/pilotos" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">person</span>Pilotos</a><a href="#/personal/educacion" data-route="personal/educacion" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">school</span>Historial educativo</a></div>
         </section>
         <section class="nav-group" data-group="seguridad">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">security</span>Seguridad</span><span class="nav-chevron" aria-hidden="true"></span></button>
@@ -49,9 +49,18 @@
       <section id="panel-inicio" class="view-panel" data-view="inicio"><div class="welcome-panel"><p class="eyebrow">Vista general</p><h2>Control operativo de Transmetro</h2><p>Seleccione una entidad en el menú para consultar, registrar o modificar información.</p><div id="summary-cards" class="summary-cards"></div></div></section>
       <section id="panel-lineas" class="view-panel" data-view="red/lineas"><div id="lineas-content" class="module-grid"></div></section>
       <section id="panel-estaciones" class="view-panel" data-view="red/estaciones"><div id="estaciones-content" class="module-grid"></div></section>
+      <section class="view-panel" data-view="red/rutas" hidden>
+        <div class="panel">
+          <div class="panel-heading"><h3><span class="material-symbols-outlined" aria-hidden="true">route</span>Estaciones de la línea</h3></div>
+          <div class="route-toolbar"><label>Línea<select id="ruta-linea"></select></label><button id="ruta-editar" class="button button-add" type="button" disabled>Configurar ruta</button></div>
+          <div class="table-responsive"><table class="records-table"><thead><tr><th scope="col">Orden</th><th scope="col">Estación</th><th scope="col">Distancia anterior (km)</th><th scope="col">Accesos</th></tr></thead><tbody id="ruta-list"></tbody></table></div>
+          <p id="ruta-resumen" class="route-summary" role="status">Seleccione una línea.</p>
+        </div>
+      </section>
       <section id="panel-flota" class="view-panel" data-view="flota/parqueos"><div id="parqueos-content" class="module-grid"></div></section>
       <section id="panel-buses" class="view-panel" data-view="flota/buses"><div id="buses-content" class="module-grid"></div></section>
       <section id="panel-personal" class="view-panel" data-view="personal/pilotos"><div id="pilotos-content" class="module-grid"></div></section>
+      <section class="view-panel" data-view="personal/educacion" hidden><div id="educacion-content" class="module-grid"></div></section>
       <section id="panel-seguridad" class="view-panel" data-view="seguridad/accesos"><div id="accesos-content" class="module-grid"></div></section>
       <section id="panel-guardias" class="view-panel" data-view="seguridad/guardias"><div id="guardias-content" class="module-grid"></div></section>
       <section id="panel-administracion" class="view-panel" data-view="administracion/municipalidades"><div id="municipalidades-content" class="module-grid"></div></section>
@@ -66,7 +75,15 @@
     </main>
   </div>
   <p id="notice" class="notice" role="status"></p>
+  <div id="ruta-modal" class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="ruta-modal-title">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content transmetro-modal"><form id="ruta-form" class="modal-form">
+      <div class="modal-header"><h3 id="ruta-modal-title">Configurar ruta</h3><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+      <div class="modal-body"><p>Ordene las estaciones y registre la distancia desde la anterior. La primera estación tiene distancia cero.</p><div id="ruta-editor"></div><button id="ruta-agregar" class="button button-secondary" type="button">Agregar estación</button><p id="ruta-error" class="login-message" role="alert"></p></div>
+      <div class="modal-footer"><button class="button button-secondary" type="button" data-bs-dismiss="modal">Cancelar</button><button id="ruta-guardar" class="button" type="submit">Guardar ruta</button></div>
+    </form></div></div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script src="rutas.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,5 +1,9 @@
 # Artefactos de compilacion de Maven y Java
 /target/
+/test/node_modules/
+/test/cypress/screenshots/
+/test/cypress/videos/
+/test/resultados/
 *.class
 *.jar
 *.war

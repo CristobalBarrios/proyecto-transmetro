@@ -5,9 +5,11 @@ const routes = {
   inicio: { title: "Inicio", breadcrumb: "Inicio" },
   "red/lineas": { title: "Líneas", breadcrumb: "Red / Líneas" },
   "red/estaciones": { title: "Estaciones", breadcrumb: "Red / Estaciones" },
+  "red/rutas": { title: "Rutas de líneas", breadcrumb: "Red / Rutas de líneas" },
   "flota/parqueos": { title: "Parqueos", breadcrumb: "Flota / Parqueos" },
   "flota/buses": { title: "Buses", breadcrumb: "Flota / Buses" },
   "personal/pilotos": { title: "Pilotos", breadcrumb: "Personal / Pilotos" },
+  "personal/educacion": { title: "Historial educativo", breadcrumb: "Personal / Historial educativo" },
   "seguridad/accesos": { title: "Accesos", breadcrumb: "Seguridad / Accesos" },
   "seguridad/guardias": { title: "Guardias", breadcrumb: "Seguridad / Guardias" },
   "administracion/municipalidades": { title: "Municipalidades", breadcrumb: "Administración / Municipalidades" },
@@ -15,6 +17,24 @@ const routes = {
 };
 
 const resources = [
+  {
+    key: "educacion", endpoint: "/api/educacion-pilotos", container: "#educacion-content", route: "personal/educacion", icon: "school",
+    title: "Formación registrada", singular: "formación", newLabel: "Nueva formación",
+    columns: [
+      { label: "Piloto", value: record => referenceName("pilotos", record.pilotoId) },
+      { label: "Nivel", value: record => record.nivel },
+      { label: "Institución", value: record => record.institucion },
+      { label: "Título", value: record => record.titulo || "-" },
+      { label: "Año de finalización", value: record => record.anioFinalizacion ?? "-" }
+    ],
+    fields: [
+      { name: "pilotoId", label: "Piloto", type: "select", reference: "pilotos", required: true },
+      { name: "nivel", label: "Nivel educativo", required: true, maxLength: 60 },
+      { name: "institucion", label: "Institución", required: true, maxLength: 150 },
+      { name: "titulo", label: "Título obtenido", maxLength: 150, optional: true },
+      { name: "anioFinalizacion", label: "Año de finalización", type: "number", min: 1900, max: 2100, optional: true }
+    ]
+  },
   {
     key: "municipalidades", endpoint: "/api/municipalidades", container: "#municipalidades-content", route: "administracion/municipalidades", icon: "account_balance",
     title: "Municipalidades registradas", singular: "municipalidad", newLabel: "Nueva municipalidad",
@@ -223,6 +243,7 @@ function createField(resource, field) {
   if (field.type && field.type !== "select") control.type = field.type;
   if (field.maxLength) control.maxLength = field.maxLength;
   if (field.min) control.min = field.min;
+  if (field.max) control.max = field.max;
   if (field.placeholder) control.placeholder = field.placeholder;
   control.dataset.resource = resource.key;
   label.append(control);
@@ -236,6 +257,7 @@ async function loadAll() {
     populateSelects();
     resources.forEach(renderResource);
     renderDashboard();
+    await refreshRouteSelector();
   } catch (error) {
     showNotice(`No se pudieron cargar los registros: ${error.message}`, true);
   }
@@ -255,7 +277,7 @@ function renderDashboard() {
     const count = document.createElement("strong");
     count.textContent = String((recordsByKey[resource.key] || []).length);
     const label = document.createElement("span");
-    label.textContent = resource.title.replace(" registrados", "").replace(" registradas", "");
+    label.textContent = routes[resource.route].title;
     card.append(icon, count, label);
     container.append(card);
   });
@@ -440,5 +462,6 @@ function configureNavigation() {
 }
 
 createInterfaces();
+configureRoutes();
 configureNavigation();
 loadAll();

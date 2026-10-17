@@ -1,0 +1,12 @@
+{
+  "name": "pruebas-transmetro",
+  "private": true,
+  "scripts": {
+    "test:e2e": "node helpers/ejecutar-e2e.cjs",
+    "test:e2e:open": "node helpers/ejecutar-e2e.cjs --open"
+  },
+  "devDependencies": {
+    "cypress": "^15.21.1",
+    "pg": "^8.16.0"
+  }
+}

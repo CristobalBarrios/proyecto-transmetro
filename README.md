@@ -9,8 +9,20 @@ Demostración web para administrar catálogos base de Transmetro. Usa sin modifi
 - Ver, agregar y modificar pilotos, guardias y accesos.
 - Seleccionar las referencias directas necesarias desde listas desplegables.
 - Iniciar sesión desde una pantalla propia que permite mostrar u ocultar la contraseña.
+- Configurar el orden de estaciones de una línea, las distancias entre estaciones y consultar distancia total, accesos y buses asignados.
+- Registrar y modificar la formación académica de cada piloto desde Historial educativo.
 
-## Requisitos
+En **Red > Rutas de líneas**, seleccione una línea y abra **Configurar ruta**. Agregue sus estaciones, ordénelas con Subir/Bajar y registre la distancia desde la estación anterior. La primera tiene distancia cero. Revise las distancias después de reordenar. El guardado reemplaza la secuencia completa de forma transaccional y rechaza duplicados; no admite cambios mientras haya recorridos en curso. La cantidad de buses se muestra para preparar la operación, y se valida al modificar rutas de líneas que ya están operativas.
+
+En **Personal > Historial educativo**, agregue las formaciones y seleccione el piloto correspondiente. El título y el año de finalización son opcionales.
+
+Estas funciones utilizan las tablas existentes `linea_estacion` y `educacion_piloto`. No requieren volver a ejecutar los scripts ni cambiar el esquema. Los módulos pendientes están registrados en `PLAN_DESARROLLO.md`.
+
+## Pruebas durante el desarrollo
+
+El proyecto incluye pruebas Java y Cypress sobre una base PostgreSQL local independiente. Cypress y sus dependencias están separados en `test/`. Consulte `test/README.md` para ejecutarlas y `pruebas/PLAN_PRUEBAS.md` para los casos y criterios de aceptación. Para las pruebas Cypress se requiere Node.js; la aplicación desplegada sigue ejecutándose únicamente con Java.
+
+## Requisitos de ejecución
 
 - JDK 21.
 - PostgreSQL 18 o compatible.
