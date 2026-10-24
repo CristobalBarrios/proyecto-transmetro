@@ -1,6 +1,6 @@
 # Sistema de control operativo para Transmetro
 
-Demostración web para administrar catálogos base de Transmetro. Usa sin modificaciones el modelo relacional aprobado el 26 de septiembre de 2026.
+Aplicación web para controlar la red y la operación de Transmetro. Usa sin modificaciones el modelo relacional aprobado el 26 de septiembre de 2026.
 
 ## Alcance de esta entrega
 
@@ -11,12 +11,31 @@ Demostración web para administrar catálogos base de Transmetro. Usa sin modifi
 - Iniciar sesión desde una pantalla propia que permite mostrar u ocultar la contraseña.
 - Configurar el orden de estaciones de una línea, las distancias entre estaciones y consultar distancia total, accesos y buses asignados.
 - Registrar y modificar la formación académica de cada piloto desde Historial educativo.
+- Asignar y finalizar guardias desde Seguridad > Asignaciones, conservando fechas y responsable.
+- Revisar pendientes de preparación y activar o desactivar líneas desde Operación.
+- Impedir cambios de preparación que dejen una línea operativa sin estaciones, buses suficientes o cobertura de guardias en sus accesos.
+- Administrar usuarios y perfiles; asociar cada operador a su estación.
+- Iniciar y finalizar recorridos, registrar visitas ordenadas, ocupación y salidas con la espera adicional requerida.
+- Generar alertas de ocupación y asignar buses de refuerzo.
+- Registrar, atender y cerrar eventos operativos y consultar la bitácora de cambios.
+- Consultar reportes de red, flota, personal y operación; filtrar los operativos por período y recurso.
+- Cargar referencias de rutas y estaciones desde JSON autorizado y revisar las rutas rechazadas.
 
 En **Red > Rutas de líneas**, seleccione una línea y abra **Configurar ruta**. Agregue sus estaciones, ordénelas con Subir/Bajar y registre la distancia desde la estación anterior. La primera tiene distancia cero. Revise las distancias después de reordenar. El guardado reemplaza la secuencia completa de forma transaccional y rechaza duplicados; no admite cambios mientras haya recorridos en curso. La cantidad de buses se muestra para preparar la operación, y se valida al modificar rutas de líneas que ya están operativas.
 
 En **Personal > Historial educativo**, agregue las formaciones y seleccione el piloto correspondiente. El título y el año de finalización son opcionales.
 
-Estas funciones utilizan las tablas existentes `linea_estacion` y `educacion_piloto`. No requieren volver a ejecutar los scripts ni cambiar el esquema. Los módulos pendientes están registrados en `PLAN_DESARROLLO.md`.
+Estas funciones utilizan las tablas existentes. No requieren volver a ejecutar los scripts ni cambiar el esquema. El alcance y flujo de uso están en `PLAN_DESARROLLO.md`.
+
+Para activar una línea, registre sus estaciones y accesos, asigne entre uno y dos buses por estación, cubra cada acceso con un guardia activo y registre un operador activo por estación. En **Operación > Preparación de líneas** podrá consultar lo que falta. Para sustituir un guardia sin perder cobertura, asigne primero el reemplazo y después finalice la asignación anterior. Si necesita rehacer la preparación, desactive antes la línea; esto solo se permite cuando no haya recorridos en curso.
+
+La autenticación utiliza la tabla `usuario` y contraseñas BCrypt. `APP_USERNAME` y `APP_PASSWORD` configuran la cuenta administradora inicial: al iniciar se crea o actualiza esa cuenta, incluido su perfil y contraseña. Las demás cuentas se gestionan en **Administración > Usuarios**. Los usuarios de los datos SQL de ejemplo contienen hashes de marcador; establezca una contraseña desde esta pantalla antes de usarlos. No se agregan variables de entorno ni se modifican los scripts SQL.
+
+En **Operación > Recorridos**, asigne un bus de la línea y un piloto disponibles. En **Visitas**, registre la llegada, salida prevista y pasajeros en el orden de la ruta. Si la ocupación es menor al 25%, la salida debe respetar cinco minutos adicionales; con pasajeros esperando desde el 150% de capacidad se genera una alerta. En **Alertas**, asigne otro bus disponible como refuerzo. Finalice el recorrido después de registrar todas sus salidas.
+
+Los perfiles del modelo limitan las modificaciones de red, flota, personal y seguridad. El operador está asociado a una estación y solo registra sus visitas; el administrador administra cuentas. La cuenta inicial configurada por variables de entorno se reserva para administración.
+
+En **Red > Datos de referencia**, seleccione un archivo con el formato de `pruebas/REFERENCIAS_EJEMPLO.json`, identifique su fuente y confirme su autorización. Cada ruta se guarda completa o se rechaza con un motivo. No se consultan servicios externos. Los eventos, reportes y bitácora tienen pantallas separadas.
 
 ## Pruebas durante el desarrollo
 

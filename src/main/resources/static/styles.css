@@ -9,6 +9,7 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+input[type="checkbox"] { width: auto; min-height: 0; margin-right: .5rem; accent-color: #172b78; }
 
 body {
   margin: 0;

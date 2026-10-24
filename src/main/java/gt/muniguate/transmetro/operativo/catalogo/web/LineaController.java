@@ -1,6 +1,10 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
+import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+
 import gt.muniguate.transmetro.operativo.catalogo.domain.Linea;
+import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+import org.springframework.transaction.annotation.Transactional;
 import gt.muniguate.transmetro.operativo.catalogo.repository.LineaRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -20,19 +24,24 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Transactional
 @RestController
 @RequestMapping("/api/lineas")
 public class LineaController {
+    private final UsuarioService auditoria;
     private final LineaRepository lineas;
+    private final OperacionService operacion;
 
-    public LineaController(LineaRepository lineas) {
+    public LineaController(LineaRepository lineas, OperacionService operacion, UsuarioService auditoria) {
+        this.auditoria = auditoria;
         this.lineas = lineas;
+        this.operacion = operacion;
     }
 
     @GetMapping
     public List<LineaRespuesta> listar() {
         return lineas.findAllByOrderByCodigoAsc().stream()
-                .map(linea -> new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre()))
+                .map(linea -> new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre(), linea.getEstado()))
                 .toList();
     }
 
@@ -40,16 +49,20 @@ public class LineaController {
     @ResponseStatus(HttpStatus.CREATED)
     public LineaRespuesta crear(@Valid @RequestBody LineaSolicitud solicitud) {
         Linea linea = lineas.save(new Linea(solicitud.municipalidadId(), solicitud.codigo(), solicitud.nombre()));
-        return new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre());
+        auditoria.registrar("linea", linea.getId(), "guardar");
+        return new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre(), linea.getEstado());
     }
 
     @PutMapping("/{id}")
+    @Transactional
     public LineaRespuesta actualizar(@PathVariable Integer id, @Valid @RequestBody LineaSolicitud solicitud) {
+        operacion.bloquear();
         Linea linea = lineas.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Línea no encontrada."));
         linea.actualizar(solicitud.municipalidadId(), solicitud.codigo(), solicitud.nombre());
         Linea actualizada = lineas.save(linea);
-        return new LineaRespuesta(actualizada.getId(), actualizada.getMunicipalidadId(), actualizada.getCodigo(), actualizada.getNombre());
+        auditoria.registrar("linea", actualizada.getId(), "guardar");
+        return new LineaRespuesta(actualizada.getId(), actualizada.getMunicipalidadId(), actualizada.getCodigo(), actualizada.getNombre(), actualizada.getEstado());
     }
 
     public record LineaSolicitud(
@@ -58,6 +71,6 @@ public class LineaController {
             @NotBlank @Size(max = 120) String nombre) {
     }
 
-    public record LineaRespuesta(Integer id, Integer municipalidadId, String codigo, String nombre) {
+    public record LineaRespuesta(Integer id, Integer municipalidadId, String codigo, String nombre, String estado) {
     }
 }

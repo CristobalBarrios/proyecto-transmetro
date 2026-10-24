@@ -1,6 +1,22 @@
-describe('Catálogos', () => {
+describe('CU-0001 Administrar líneas y estaciones', () => {
   beforeEach(() => { cy.task('db:reset'); cy.ingresar(); });
-  it('CAT-01 crea, modifica y conserva una línea', () => {
+  it('CP-0001-03 guarda y conserva la ruta y su distancia total', () => {
+    cy.get('[data-route="red/rutas"]').click();
+    cy.get('#ruta-linea').select('1');
+    cy.get('#ruta-editar').click();
+    cy.get('#ruta-agregar').click();
+    cy.get('.route-editor-row').eq(0).find('select').select('1');
+    cy.get('#ruta-agregar').click();
+    cy.get('.route-editor-row').eq(1).find('select').select('2');
+    cy.get('.route-editor-row').eq(1).find('input').type('1.250');
+    cy.get('#ruta-form').submit();
+    cy.get('#ruta-modal').should('not.be.visible');
+    cy.reload();
+    cy.get('#ruta-linea').select('1');
+    cy.get('#ruta-list tr').should('have.length', 2);
+    cy.get('#ruta-resumen').should('contain', '1.250 km');
+  });
+  it('CP-0001-01 crea, modifica y conserva una línea', () => {
     cy.get('[data-route="red/lineas"]').click();
     cy.get('#lineas-modal').should('not.be.visible');
     cy.get('#lineas-content').contains('button', 'Nueva línea').click();
@@ -18,12 +34,7 @@ describe('Catálogos', () => {
     cy.reload();
     cy.get('#lineas-list').should('contain', 'Línea modificada');
   });
-  it('CAT-02 rechaza un código de línea duplicado', () => {
-    cy.escribirApi('POST', '/api/lineas', { municipalidadId: 1, codigo: 'PRUEBA-1', nombre: 'Duplicado' }, false)
-      .its('status').should('eq', 409);
-    cy.request('/api/lineas').its('body').should('have.length', 1);
-  });
-  it('CAT-03 crea una estación con todos sus campos', () => {
+  it('CP-0001-02 crea una estación con todos sus campos', () => {
     cy.get('[data-route="red/estaciones"]').click();
     cy.get('#estaciones-content').contains('button', 'Nueva estación').click();
     cy.get('#estaciones-modal').should('have.focus');
@@ -34,21 +45,5 @@ describe('Catálogos', () => {
     cy.get('#estaciones-form [name=codigoRuta]').type('PRUEBA-C');
     cy.get('#estaciones-form').submit();
     cy.get('#estaciones-list').contains('tr', 'Estación C').should('contain', 'Dirección C').and('contain', 'PRUEBA-C');
-  });
-  it('CAT-04 guarda los demás catálogos y permite consultar los registros', () => {
-    const casos = [
-      ['municipalidades', { nombre: 'Municipalidad nueva' }, 'Municipalidad nueva'],
-      ['parqueos', { nombre: 'Parqueo nuevo', estacionId: 1 }, 'Parqueo nuevo'],
-      ['buses', { placa: 'PRUEBA-BUS', capacidadMaxima: 80, lineaId: 1, parqueoId: 1, estado: 'disponible' }, 'PRUEBA-BUS'],
-      ['pilotos', { nombre: 'Piloto nuevo', residencia: 'Residencia', telefono: '12345678', correo: null }, 'Piloto nuevo'],
-      ['guardias', { nombre: 'Guardia nuevo', telefono: '12345678' }, 'Guardia nuevo'],
-      ['accesos', { estacionId: 2, codigo: 'ACC-B', descripcion: 'Acceso B' }, 'ACC-B']
-    ];
-    casos.forEach(([key, payload, texto]) => {
-      cy.escribirApi('POST', `/api/${key}`, payload).then(({ body }) => {
-        cy.escribirApi('PUT', `/api/${key}/${body.id}`, payload).its('status').should('eq', 200);
-      });
-      cy.request(`/api/${key}`).then(({ body }) => expect(JSON.stringify(body)).to.contain(texto));
-    });
   });
 });

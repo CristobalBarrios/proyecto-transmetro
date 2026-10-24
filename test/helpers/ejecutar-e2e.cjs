@@ -22,6 +22,7 @@ async function main() {
     username: process.env.E2E_USERNAME || 'operador.pruebas',
     password: process.env.E2E_PASSWORD || require('node:crypto').randomBytes(24).toString('hex')
   };
+  process.env.E2E_USERNAME = credentials.username;
   const java = process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME, 'bin', process.platform === 'win32' ? 'java.exe' : 'java') : 'java';
   const logs = path.resolve(project, 'resultados'); fs.mkdirSync(logs, { recursive: true });
   const output = fs.openSync(path.join(logs, 'servidor.log'), 'w');

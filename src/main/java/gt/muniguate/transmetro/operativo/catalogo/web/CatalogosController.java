@@ -1,6 +1,10 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
+import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+
 import gt.muniguate.transmetro.operativo.catalogo.domain.*;
+import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+import org.springframework.transaction.annotation.Transactional;
 import gt.muniguate.transmetro.operativo.catalogo.repository.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -10,24 +14,29 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Transactional
 @RestController
 @RequestMapping("/api")
 public class CatalogosController {
+    private final UsuarioService auditoria;
     private final MunicipalidadRepository municipalidades;
     private final ParqueoRepository parqueos;
     private final BusRepository buses;
     private final PilotoRepository pilotos;
     private final GuardiaRepository guardias;
     private final AccesoRepository accesos;
+    private final OperacionService operacion;
 
     public CatalogosController(MunicipalidadRepository municipalidades, ParqueoRepository parqueos, BusRepository buses,
-                               PilotoRepository pilotos, GuardiaRepository guardias, AccesoRepository accesos) {
+                               PilotoRepository pilotos, GuardiaRepository guardias, AccesoRepository accesos, OperacionService operacion, UsuarioService auditoria) {
+        this.auditoria = auditoria;
         this.municipalidades = municipalidades;
         this.parqueos = parqueos;
         this.buses = buses;
         this.pilotos = pilotos;
         this.guardias = guardias;
         this.accesos = accesos;
+        this.operacion = operacion;
     }
 
     @GetMapping("/municipalidades")
@@ -37,14 +46,18 @@ public class CatalogosController {
 
     @PostMapping("/municipalidades") @ResponseStatus(HttpStatus.CREATED)
     public MunicipalidadRespuesta crearMunicipalidad(@Valid @RequestBody MunicipalidadSolicitud solicitud) {
-        return municipalidad(municipalidades.save(new Municipalidad(solicitud.nombre())));
+        var guardado = municipalidades.save(new Municipalidad(solicitud.nombre()));
+        auditoria.registrar("municipalidad", guardado.getId(), "guardar");
+        return municipalidad(guardado);
     }
 
     @PutMapping("/municipalidades/{id}")
     public MunicipalidadRespuesta actualizarMunicipalidad(@PathVariable Integer id, @Valid @RequestBody MunicipalidadSolicitud solicitud) {
         Municipalidad entidad = municipalidades.findById(id).orElseThrow(() -> noEncontrado("Municipalidad"));
         entidad.actualizar(solicitud.nombre());
-        return municipalidad(municipalidades.save(entidad));
+        var guardado = municipalidades.save(entidad);
+        auditoria.registrar("municipalidad", guardado.getId(), "guardar");
+        return municipalidad(guardado);
     }
 
     @GetMapping("/parqueos")
@@ -52,29 +65,44 @@ public class CatalogosController {
 
     @PostMapping("/parqueos") @ResponseStatus(HttpStatus.CREATED)
     public ParqueoRespuesta crearParqueo(@Valid @RequestBody ParqueoSolicitud solicitud) {
-        return parqueo(parqueos.save(new Parqueo(solicitud.estacionId(), solicitud.nombre())));
+        var guardado = parqueos.save(new Parqueo(solicitud.estacionId(), solicitud.nombre()));
+        auditoria.registrar("parqueo", guardado.getId(), "guardar");
+        return parqueo(guardado);
     }
 
     @PutMapping("/parqueos/{id}")
     public ParqueoRespuesta actualizarParqueo(@PathVariable Integer id, @Valid @RequestBody ParqueoSolicitud solicitud) {
         Parqueo entidad = parqueos.findById(id).orElseThrow(() -> noEncontrado("Parqueo"));
         entidad.actualizar(solicitud.estacionId(), solicitud.nombre());
-        return parqueo(parqueos.save(entidad));
+        var guardado = parqueos.save(entidad);
+        auditoria.registrar("parqueo", guardado.getId(), "guardar");
+        return parqueo(guardado);
     }
 
     @GetMapping("/buses")
     public List<BusRespuesta> listarBuses() { return buses.findAllByOrderByPlacaAsc().stream().map(this::bus).toList(); }
 
     @PostMapping("/buses") @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public BusRespuesta crearBus(@Valid @RequestBody BusSolicitud solicitud) {
-        return bus(buses.save(new Bus(solicitud.placa(), solicitud.capacidadMaxima(), solicitud.lineaId(), solicitud.parqueoId(), solicitud.estado())));
+        operacion.bloquear();
+        Bus entidad = buses.saveAndFlush(new Bus(solicitud.placa(), solicitud.capacidadMaxima(), solicitud.lineaId(), solicitud.parqueoId(), solicitud.estado()));
+        operacion.validarActivas();
+        auditoria.registrar("bus", entidad.getId(), "guardar");
+        return bus(entidad);
     }
 
     @PutMapping("/buses/{id}")
+    @Transactional
     public BusRespuesta actualizarBus(@PathVariable Integer id, @Valid @RequestBody BusSolicitud solicitud) {
+        operacion.bloquear();
+        operacion.validarBusEnCurso(id, solicitud.lineaId(), solicitud.estado());
         Bus entidad = buses.findById(id).orElseThrow(() -> noEncontrado("Bus"));
         entidad.actualizar(solicitud.placa(), solicitud.capacidadMaxima(), solicitud.lineaId(), solicitud.parqueoId(), solicitud.estado());
-        return bus(buses.save(entidad));
+        buses.saveAndFlush(entidad);
+        operacion.validarActivas();
+        auditoria.registrar("bus", entidad.getId(), "guardar");
+        return bus(entidad);
     }
 
     @GetMapping("/pilotos")
@@ -82,14 +110,18 @@ public class CatalogosController {
 
     @PostMapping("/pilotos") @ResponseStatus(HttpStatus.CREATED)
     public PilotoRespuesta crearPiloto(@Valid @RequestBody PilotoSolicitud solicitud) {
-        return piloto(pilotos.save(new Piloto(solicitud.nombre(), solicitud.residencia(), solicitud.telefono(), solicitud.correo())));
+        var guardado = pilotos.save(new Piloto(solicitud.nombre(), solicitud.residencia(), solicitud.telefono(), solicitud.correo()));
+        auditoria.registrar("piloto", guardado.getId(), "guardar");
+        return piloto(guardado);
     }
 
     @PutMapping("/pilotos/{id}")
     public PilotoRespuesta actualizarPiloto(@PathVariable Integer id, @Valid @RequestBody PilotoSolicitud solicitud) {
         Piloto entidad = pilotos.findById(id).orElseThrow(() -> noEncontrado("Piloto"));
         entidad.actualizar(solicitud.nombre(), solicitud.residencia(), solicitud.telefono(), solicitud.correo());
-        return piloto(pilotos.save(entidad));
+        var guardado = pilotos.save(entidad);
+        auditoria.registrar("piloto", guardado.getId(), "guardar");
+        return piloto(guardado);
     }
 
     @GetMapping("/guardias")
@@ -97,29 +129,43 @@ public class CatalogosController {
 
     @PostMapping("/guardias") @ResponseStatus(HttpStatus.CREATED)
     public GuardiaRespuesta crearGuardia(@Valid @RequestBody GuardiaSolicitud solicitud) {
-        return guardia(guardias.save(new Guardia(solicitud.nombre(), solicitud.telefono())));
+        var guardado = guardias.save(new Guardia(solicitud.nombre(), solicitud.telefono()));
+        auditoria.registrar("guardia", guardado.getId(), "guardar");
+        return guardia(guardado);
     }
 
     @PutMapping("/guardias/{id}")
     public GuardiaRespuesta actualizarGuardia(@PathVariable Integer id, @Valid @RequestBody GuardiaSolicitud solicitud) {
         Guardia entidad = guardias.findById(id).orElseThrow(() -> noEncontrado("Guardia"));
         entidad.actualizar(solicitud.nombre(), solicitud.telefono());
-        return guardia(guardias.save(entidad));
+        var guardado = guardias.save(entidad);
+        auditoria.registrar("guardia", guardado.getId(), "guardar");
+        return guardia(guardado);
     }
 
     @GetMapping("/accesos")
     public List<AccesoRespuesta> listarAccesos() { return accesos.findAllByOrderByCodigoAsc().stream().map(this::acceso).toList(); }
 
     @PostMapping("/accesos") @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public AccesoRespuesta crearAcceso(@Valid @RequestBody AccesoSolicitud solicitud) {
-        return acceso(accesos.save(new Acceso(solicitud.estacionId(), solicitud.codigo(), solicitud.descripcion())));
+        operacion.bloquear();
+        Acceso entidad = accesos.saveAndFlush(new Acceso(solicitud.estacionId(), solicitud.codigo(), solicitud.descripcion()));
+        operacion.validarActivas();
+        auditoria.registrar("acceso", entidad.getId(), "guardar");
+        return acceso(entidad);
     }
 
     @PutMapping("/accesos/{id}")
+    @Transactional
     public AccesoRespuesta actualizarAcceso(@PathVariable Integer id, @Valid @RequestBody AccesoSolicitud solicitud) {
+        operacion.bloquear();
         Acceso entidad = accesos.findById(id).orElseThrow(() -> noEncontrado("Acceso"));
         entidad.actualizar(solicitud.estacionId(), solicitud.codigo(), solicitud.descripcion());
-        return acceso(accesos.save(entidad));
+        accesos.saveAndFlush(entidad);
+        operacion.validarActivas();
+        auditoria.registrar("acceso", entidad.getId(), "guardar");
+        return acceso(entidad);
     }
 
     private ResponseStatusException noEncontrado(String entidad) { return new ResponseStatusException(HttpStatus.NOT_FOUND, entidad + " no encontrado."); }

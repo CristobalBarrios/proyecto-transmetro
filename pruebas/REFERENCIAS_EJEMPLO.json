@@ -1,0 +1,13 @@
+{
+  "rutas": [
+    {
+      "municipalidadId": 1,
+      "codigo": "REF-1",
+      "nombre": "Línea de referencia",
+      "estaciones": [
+        { "nombre": "Referencia A", "direccion": "Dirección A", "zona": 1, "codigoRuta": "REF-A", "distanciaKm": 0 },
+        { "nombre": "Referencia B", "direccion": "Dirección B", "zona": 2, "codigoRuta": "REF-B", "distanciaKm": 1.5 }
+      ]
+    }
+  ]
+}

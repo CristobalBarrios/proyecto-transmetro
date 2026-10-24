@@ -12,8 +12,17 @@ const routes = {
   "personal/educacion": { title: "Historial educativo", breadcrumb: "Personal / Historial educativo" },
   "seguridad/accesos": { title: "Accesos", breadcrumb: "Seguridad / Accesos" },
   "seguridad/guardias": { title: "Guardias", breadcrumb: "Seguridad / Guardias" },
+  "seguridad/asignaciones": { title: "Asignaciones de guardias", breadcrumb: "Seguridad / Asignaciones" },
   "administracion/municipalidades": { title: "Municipalidades", breadcrumb: "Administración / Municipalidades" },
-  operacion: { title: "Operación", breadcrumb: "Operación" }
+  operacion: { title: "Preparación de líneas", breadcrumb: "Operación / Preparación" },
+  "operacion/recorridos": { title: "Recorridos", breadcrumb: "Operación / Recorridos" },
+  "operacion/visitas": { title: "Visitas de estaciones", breadcrumb: "Operación / Visitas" },
+  "operacion/alertas": { title: "Alertas", breadcrumb: "Operación / Alertas" },
+  "operacion/eventos": { title: "Eventos operativos", breadcrumb: "Operación / Eventos" },
+  "administracion/usuarios": { title: "Usuarios", breadcrumb: "Administración / Usuarios" },
+  "administracion/bitacora": { title: "Bitácora", breadcrumb: "Administración / Bitácora" },
+  "red/referencias": { title: "Datos de referencia", breadcrumb: "Red / Datos de referencia" },
+  reportes: { title: "Reportes", breadcrumb: "Reportes" }
 };
 
 const resources = [
@@ -47,7 +56,8 @@ const resources = [
     columns: [
       { label: "Código", value: record => record.codigo },
       { label: "Nombre", value: record => record.nombre },
-      { label: "Municipalidad", value: record => referenceName("municipalidades", record.municipalidadId) }
+      { label: "Municipalidad", value: record => referenceName("municipalidades", record.municipalidadId) },
+      { label: "Estado", value: record => record.estado }
     ],
     fields: [
       { name: "municipalidadId", label: "Municipalidad", type: "select", reference: "municipalidades", required: true },
@@ -174,6 +184,7 @@ async function request(path, options = {}) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "No fue posible completar la operación.");
   }
+  if (response.status === 204) return null;
   return response.json();
 }
 
@@ -196,7 +207,8 @@ function createPanel(resource) {
   button.type = "button";
   button.textContent = resource.newLabel;
   button.addEventListener("click", () => openForm(resource));
-  heading.append(titleContainer, button);
+  heading.append(titleContainer);
+  if (resource.newLabel && puedeEscribir(resource.key)) heading.append(button);
 
   const responsive = document.createElement("div");
   responsive.className = "table-responsive";
@@ -225,7 +237,7 @@ function createModal(resource) {
   modal.id = `${resource.key}-modal`;
   modal.tabIndex = -1;
   modal.setAttribute("aria-hidden", "true");
-  modal.innerHTML = `<div class="modal-dialog modal-dialog-centered"><div class="modal-content transmetro-modal"><form id="${resource.key}-form" class="modal-form"><div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="${resource.key}-form-title">${resource.newLabel}</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"></div><div class="modal-footer form-actions"><button type="button" class="button button-secondary" data-bs-dismiss="modal">Cancelar</button><button class="button" type="submit">Guardar ${resource.singular}</button></div></form></div></div>`;
+  modal.innerHTML = `<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content transmetro-modal"><form id="${resource.key}-form" class="modal-form"><div class="modal-header"><div><p class="eyebrow">Acción</p><h3 id="${resource.key}-form-title">${resource.newLabel}</h3></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"></div><div class="modal-footer form-actions"><button type="button" class="button button-secondary" data-bs-dismiss="modal">Cancelar</button><button class="button" type="submit">Guardar ${resource.singular}</button></div></form></div></div>`;
   const body = modal.querySelector(".modal-body");
   resource.fields.forEach(field => body.append(createField(resource, field)));
   const form = modal.querySelector("form");
@@ -242,7 +254,7 @@ function createField(resource, field) {
   control.required = Boolean(field.required);
   if (field.type && field.type !== "select") control.type = field.type;
   if (field.maxLength) control.maxLength = field.maxLength;
-  if (field.min) control.min = field.min;
+  if (field.min !== undefined) control.min = field.min;
   if (field.max) control.max = field.max;
   if (field.placeholder) control.placeholder = field.placeholder;
   control.dataset.resource = resource.key;
@@ -252,12 +264,15 @@ function createField(resource, field) {
 
 async function loadAll() {
   try {
-    const responses = await Promise.all(resources.map(async resource => [resource.key, await request(resource.endpoint)]));
+    const responses = await Promise.all(resources.filter(resource => puedeLeer(resource.key)).map(async resource => [resource.key, await request(resource.endpoint)]));
     responses.forEach(([key, records]) => { recordsByKey[key] = records; });
     populateSelects();
-    resources.forEach(renderResource);
+    actualizarFiltrosReportes();
+    resources.filter(resource => puedeLeer(resource.key)).forEach(renderResource);
     renderDashboard();
+    await refreshOperationPanels();
     await refreshRouteSelector();
+    if (["administrador", "supervisor"].includes(sesion.perfil)) tablaConsulta("#bitacora-list", await request("/api/bitacora"));
   } catch (error) {
     showNotice(`No se pudieron cargar los registros: ${error.message}`, true);
   }
@@ -266,7 +281,7 @@ async function loadAll() {
 function renderDashboard() {
   const container = document.querySelector("#summary-cards");
   container.replaceChildren();
-  resources.forEach(resource => {
+  resources.filter(resource => puedeLeer(resource.key)).forEach(resource => {
     const card = document.createElement("a");
     card.className = "summary-card";
     card.href = `#/${resource.route}`;
@@ -296,7 +311,7 @@ function populateSelects() {
         control.append(placeholder);
       }
       const options = field.reference
-        ? (recordsByKey[field.reference] || []).map(record => ({ value: record.id, label: optionLabel(field.reference, record) }))
+        ? (recordsByKey[field.reference] || []).filter(record => !field.filter || field.filter(record)).filter(record => field.reference !== "estaciones" || !["visitas","eventos"].includes(resource.key) || sesion.perfil !== "operador" || record.id === sesion.estacionId).map(record => ({ value: record.id, label: optionLabel(field.reference, record) }))
         : field.options.map(value => ({ value, label: value.replaceAll("_", " ") }));
       options.forEach(option => {
         const element = document.createElement("option");
@@ -312,6 +327,8 @@ function populateSelects() {
 function optionLabel(key, record) {
   if (key === "lineas") return `${record.codigo} - ${record.nombre}`;
   if (key === "estaciones") return `${record.nombre} (${record.codigoRuta})`;
+  if (key === "buses") return record.placa;
+  if (key === "recorridos") return `${record.id} · ${record.linea} · ${record.bus}`;
   return record.nombre;
 }
 
@@ -349,7 +366,18 @@ function renderResource(resource) {
     edit.type = "button";
     edit.textContent = "Editar";
     edit.addEventListener("click", () => openForm(resource, record));
-    actions.append(edit);
+    if (resource.allowEdit !== false && puedeEscribir(resource.key)) actions.append(edit);
+    if (puedeEscribir(resource.key)) (resource.actions?.(record) || []).forEach(action => {
+      const button = document.createElement("button");
+      button.className = "row-action";
+      button.type = "button";
+      button.textContent = action.label;
+      button.onclick = async () => {
+        try { await action.run(); await loadAll(); }
+        catch (e) { showNotice(e.message, true); }
+      };
+      actions.append(button);
+    });
     row.append(actions);
     body.append(row);
   });
@@ -384,9 +412,7 @@ async function saveResource(event, resource) {
   const payload = {};
   resource.fields.forEach(field => {
     const raw = form.elements[field.name].value.trim();
-    payload[field.name] = field.type === "number" || field.type === "select" && field.reference
-      ? (raw === "" ? null : Number(raw))
-      : (raw === "" && field.optional ? null : raw);
+    payload[field.name] = valorCampo(field, raw);
   });
   const id = form.dataset.recordId;
   try {
@@ -395,6 +421,7 @@ async function saveResource(event, resource) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    if (resource.key === "usuarios" && Number(id) === sesion.id) { window.location.assign("/login"); return; }
     bootstrap.Modal.getOrCreateInstance(document.querySelector(`#${resource.key}-modal`)).hide();
     showNotice(id ? "Cambios guardados correctamente." : "Registro guardado correctamente.");
     await loadAll();
@@ -416,6 +443,7 @@ function closeNavigation() {
 
 function showRoute() {
   const route = currentRoute();
+  if (!puedeRuta(route)) { window.location.hash = "#/inicio"; return; }
   document.querySelectorAll("[data-view]").forEach(panel => {
     panel.hidden = panel.dataset.view !== route;
   });
@@ -461,7 +489,26 @@ function configureNavigation() {
   }
 }
 
-createInterfaces();
-configureRoutes();
-configureNavigation();
-loadAll();
+async function iniciarAplicacion() {
+  try {
+    sesion = await request("/api/sesion");
+    resources.push(...gestionResources);
+    crearPantallasGestion();
+    createInterfaces();
+    configureRoutes();
+    configureAssignments();
+    configurarConsultas();
+    document.querySelectorAll("[data-route]").forEach(link => { link.hidden = !puedeRuta(link.dataset.route); });
+    document.querySelector("#ruta-editar").hidden = !puedeEscribir("lineas");
+    document.querySelector("#asignacion-nueva").hidden = !["administrador", "supervisor", "seguridad"].includes(sesion.perfil);
+    document.querySelector(".session-status").textContent = `${sesion.nombreUsuario} · ${sesion.perfil}`;
+    document.querySelector("#cerrar-sesion").onclick = async () => {
+      const token = await getCsrfToken();
+      await fetch("/logout", { method: "POST", credentials: "same-origin", headers: { [token.encabezado]: token.valor } });
+      window.location.assign("/login");
+    };
+    configureNavigation();
+    await loadAll();
+  } catch (e) { showNotice(e.message, true); }
+}
+iniciarAplicacion();

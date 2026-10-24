@@ -1,5 +1,9 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
+import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+
+import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -12,12 +16,16 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 
+@Transactional
 @RestController
 @RequestMapping("/api/rutas")
 public class RutaController {
+    private final UsuarioService auditoria;
     private final JdbcTemplate datos;
+    private final OperacionService operacion;
 
-    public RutaController(JdbcTemplate datos) { this.datos = datos; }
+    public RutaController(JdbcTemplate datos, OperacionService operacion, UsuarioService auditoria) {
+        this.auditoria = auditoria; this.datos = datos; this.operacion = operacion; }
 
     @GetMapping("/{lineaId}")
     public List<EstacionRutaRespuesta> listar(@PathVariable Integer lineaId) {
@@ -33,6 +41,7 @@ public class RutaController {
     @Transactional
     public List<EstacionRutaRespuesta> guardar(@PathVariable Integer lineaId,
                                                @Valid @RequestBody RutaSolicitud solicitud) {
+        operacion.bloquear();
         // Bloquea la línea para guardar toda la secuencia como una sola operación.
         var estados = datos.queryForList("SELECT estado FROM linea WHERE id = ? FOR UPDATE", String.class, lineaId);
         if (estados.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Línea no encontrada.");
@@ -70,6 +79,8 @@ public class RutaController {
             datos.update("INSERT INTO linea_estacion (linea_id, estacion_id, orden, distancia_desde_anterior_km) VALUES (?, ?, ?, ?)",
                     lineaId, estacion.estacionId(), indice + 1, estacion.distanciaKm());
         }
+        operacion.validarActivas();
+        auditoria.registrar("linea", lineaId, "configurar_ruta");
         return listar(lineaId);
     }
 

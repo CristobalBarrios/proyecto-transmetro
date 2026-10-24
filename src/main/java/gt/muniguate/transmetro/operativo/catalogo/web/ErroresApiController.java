@@ -11,6 +11,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class ErroresApiController {
 
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> camposNoValidos(org.springframework.web.bind.MethodArgumentNotValidException error) {
+        return Map.of("message", "Revise los campos obligatorios y sus valores.");
+    }
+
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     public org.springframework.http.ResponseEntity<Map<String, String>> reglaDeNegocio(
             org.springframework.web.server.ResponseStatusException error) {

@@ -35,10 +35,15 @@ async function reiniciar() {
   try {
     const resultado = await cliente.query('SELECT current_database() AS nombre');
     if (resultado.rows[0].nombre !== config().database) throw new Error('Base de pruebas incorrecta.');
+    const inicial = await cliente.query('SELECT nombre,nombre_usuario,password_hash FROM usuario WHERE nombre_usuario=$1', [process.env.E2E_USERNAME || 'operador.pruebas']);
     await cliente.query('BEGIN');
     await cliente.query(`TRUNCATE bitacora, evento_operativo, alerta, visita_estacion, recorrido,
       guardia_acceso, usuario, guardia, educacion_piloto, piloto, bus, parqueo, acceso,
       linea_estacion, estacion, linea, municipalidad RESTART IDENTITY`);
+    if (inicial.rows.length) {
+      const u = inicial.rows[0];
+      await cliente.query("INSERT INTO usuario(nombre,nombre_usuario,password_hash,perfil) VALUES ($1,$2,$3,'administrador')", [u.nombre,u.nombre_usuario,u.password_hash]);
+    }
     await cliente.query("INSERT INTO municipalidad (nombre) VALUES ('Municipalidad de prueba')");
     await cliente.query("INSERT INTO linea (municipalidad_id,codigo,nombre) VALUES (1,'PRUEBA-1','Línea de prueba')");
     await cliente.query(`INSERT INTO estacion (municipalidad_id,nombre,direccion,zona,codigo_ruta)

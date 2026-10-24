@@ -14,6 +14,7 @@
     <img class="topbar-logo" src="transmetro-logo.png" alt="Transmetro Ciudad de Guatemala">
     <div class="topbar-context"><p class="eyebrow">Municipalidad de Guatemala</p><strong>Sistema de control operativo</strong></div>
     <p class="session-status">Sesión protegida</p>
+    <button id="cerrar-sesion" class="button button-secondary" type="button">Salir</button>
   </header>
   <div class="app-layout">
     <aside id="app-sidebar" class="sidebar" aria-label="Navegación principal">
@@ -33,7 +34,7 @@
         </section>
         <section class="nav-group" data-group="seguridad">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">security</span>Seguridad</span><span class="nav-chevron" aria-hidden="true"></span></button>
-          <div class="nav-group-items"><a href="#/seguridad/accesos" data-route="seguridad/accesos" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">meeting_room</span>Accesos</a><a href="#/seguridad/guardias" data-route="seguridad/guardias" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">shield_person</span>Guardias</a></div>
+          <div class="nav-group-items"><a href="#/seguridad/accesos" data-route="seguridad/accesos" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">meeting_room</span>Accesos</a><a href="#/seguridad/guardias" data-route="seguridad/guardias" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">shield_person</span>Guardias</a><a href="#/seguridad/asignaciones" data-route="seguridad/asignaciones" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">assignment_ind</span>Asignaciones</a></div>
         </section>
         <section class="nav-group" data-group="administracion">
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">settings</span>Administración</span><span class="nav-chevron" aria-hidden="true"></span></button>
@@ -64,11 +65,16 @@
       <section id="panel-seguridad" class="view-panel" data-view="seguridad/accesos"><div id="accesos-content" class="module-grid"></div></section>
       <section id="panel-guardias" class="view-panel" data-view="seguridad/guardias"><div id="guardias-content" class="module-grid"></div></section>
       <section id="panel-administracion" class="view-panel" data-view="administracion/municipalidades"><div id="municipalidades-content" class="module-grid"></div></section>
-      <section id="panel-pendiente" class="view-panel" data-view="operacion">
-        <div class="panel planned-panel">
-          <div class="panel-heading"><p class="eyebrow">Siguiente etapa</p><h3>Operación</h3></div>
-          <p class="planned-description">Los recorridos, visitas, alertas y eventos requieren validaciones entre varias entidades y no se administran desde formularios directos.</p>
-          <p class="planned-note">Los catálogos necesarios para preparar esa etapa ya se pueden registrar en las demás secciones.</p>
+      <section class="view-panel" data-view="seguridad/asignaciones" hidden>
+        <div class="panel"><div class="panel-heading panel-heading-actions"><h3>Asignaciones de guardias</h3><button id="asignacion-nueva" class="button button-add" type="button">Nueva asignación</button></div>
+          <div class="table-responsive"><table class="records-table"><thead><tr><th>Guardia</th><th>Acceso</th><th>Estación</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="asignaciones-list"></tbody></table></div>
+          <p class="route-summary">Para reemplazar un guardia de una línea operativa, asigne primero el reemplazo y luego finalice la asignación anterior.</p>
+        </div>
+      </section>
+      <section class="view-panel" data-view="operacion" hidden>
+        <div class="panel"><div class="panel-heading"><h3>Preparación de líneas</h3></div>
+          <p class="route-summary">Configure la ruta, los buses y la cobertura de todos los accesos antes de activar una línea. Para cambiar su preparación, puede desactivarla mientras no tenga recorridos en curso.</p>
+          <div class="table-responsive"><table class="records-table"><thead><tr><th>Código</th><th>Línea</th><th>Estado</th><th>Estaciones</th><th>Buses</th><th>Preparación</th><th>Acciones</th></tr></thead><tbody id="operacion-list"></tbody></table></div>
         </div>
       </section>
       </div>
@@ -83,7 +89,16 @@
     </form></div></div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <div id="asignacion-modal" class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="asignacion-title">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content transmetro-modal"><form id="asignacion-form">
+      <div class="modal-header"><h3 id="asignacion-title">Nueva asignación</h3><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+      <div class="modal-body"><label>Guardia<select id="asignacion-guardia" required></select></label><label>Acceso<select id="asignacion-acceso" required></select></label><p>El inicio y el responsable se registran automáticamente al guardar.</p><p id="asignacion-error" class="login-message" role="alert"></p></div>
+      <div class="modal-footer"><button class="button button-secondary" type="button" data-bs-dismiss="modal">Cancelar</button><button id="asignacion-guardar" class="button" type="submit">Guardar asignación</button></div>
+    </form></div></div>
+  </div>
   <script src="rutas.js"></script>
+  <script src="operacion.js"></script>
+  <script src="gestion.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

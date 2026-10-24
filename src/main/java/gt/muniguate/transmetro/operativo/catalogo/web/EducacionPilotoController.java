@@ -1,5 +1,8 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
+import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+import org.springframework.transaction.annotation.Transactional;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -9,12 +12,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Transactional
 @RestController
 @RequestMapping("/api/educacion-pilotos")
 public class EducacionPilotoController {
+    private final UsuarioService auditoria;
     private final JdbcTemplate datos;
 
-    public EducacionPilotoController(JdbcTemplate datos) { this.datos = datos; }
+    public EducacionPilotoController(JdbcTemplate datos, UsuarioService auditoria) {
+        this.auditoria = auditoria; this.datos = datos; }
 
     @GetMapping
     public List<EducacionRespuesta> listar() {
@@ -33,6 +39,7 @@ public class EducacionPilotoController {
                 VALUES (?, ?, ?, ?, ?) RETURNING id
                 """, Integer.class, solicitud.pilotoId(), solicitud.nivel(), solicitud.institucion(),
                 solicitud.titulo(), solicitud.anioFinalizacion());
+        auditoria.registrar("educacion_piloto", id, "guardar");
         return respuesta(id, solicitud);
     }
 
@@ -43,6 +50,7 @@ public class EducacionPilotoController {
                 UPDATE educacion_piloto SET piloto_id = ?, nivel = ?, institucion = ?, titulo = ?, anio_finalizacion = ? WHERE id = ?
                 """, solicitud.pilotoId(), solicitud.nivel(), solicitud.institucion(), solicitud.titulo(), solicitud.anioFinalizacion(), id);
         if (filas == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Formación no encontrada.");
+        auditoria.registrar("educacion_piloto", id, "guardar");
         return respuesta(id, solicitud);
     }
 

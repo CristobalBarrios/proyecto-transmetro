@@ -1,5 +1,8 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
+import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+import org.springframework.transaction.annotation.Transactional;
+
 import gt.muniguate.transmetro.operativo.catalogo.domain.Estacion;
 import gt.muniguate.transmetro.operativo.catalogo.repository.EstacionRepository;
 import jakarta.validation.Valid;
@@ -21,12 +24,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Transactional
 @RestController
 @RequestMapping("/api/estaciones")
 public class EstacionController {
+    private final UsuarioService auditoria;
     private final EstacionRepository estaciones;
 
-    public EstacionController(EstacionRepository estaciones) {
+    public EstacionController(EstacionRepository estaciones, UsuarioService auditoria) {
+        this.auditoria = auditoria;
         this.estaciones = estaciones;
     }
 
@@ -48,6 +54,7 @@ public class EstacionController {
                 solicitud.direccion(),
                 solicitud.zona(),
                 solicitud.codigoRuta()));
+        auditoria.registrar("estacion", estacion.getId(), "guardar");
         return new EstacionRespuesta(estacion.getId(), estacion.getMunicipalidadId(), estacion.getNombre(), estacion.getDireccion(),
                 estacion.getZona(), estacion.getCodigoRuta());
     }
@@ -58,6 +65,7 @@ public class EstacionController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estación no encontrada."));
         estacion.actualizar(solicitud.municipalidadId(), solicitud.nombre(), solicitud.direccion(), solicitud.zona(), solicitud.codigoRuta());
         Estacion actualizada = estaciones.save(estacion);
+        auditoria.registrar("estacion", actualizada.getId(), "guardar");
         return new EstacionRespuesta(actualizada.getId(), actualizada.getMunicipalidadId(), actualizada.getNombre(), actualizada.getDireccion(),
                 actualizada.getZona(), actualizada.getCodigoRuta());
     }
