@@ -51,6 +51,11 @@ async function reiniciar() {
     await cliente.query("INSERT INTO acceso (estacion_id,codigo) VALUES (1,'ACC-A')");
     await cliente.query("INSERT INTO parqueo (nombre,estacion_id) VALUES ('Parqueo de prueba',1)");
     await cliente.query("INSERT INTO piloto (nombre,residencia,telefono) VALUES ('Piloto de prueba','Residencia','00000000')");
+    await cliente.query("INSERT INTO linea_estacion(linea_id,estacion_id,orden,distancia_desde_anterior_km) VALUES (1,1,1,0),(1,2,2,1.250)");
+    await cliente.query("INSERT INTO bus(placa,capacidad_maxima,linea_id,parqueo_id) VALUES ('BUS-A',80,1,1),('BUS-B',80,1,1)");
+    await cliente.query("INSERT INTO guardia(nombre) VALUES ('Guardia inicial')");
+    await cliente.query("INSERT INTO guardia_acceso(guardia_id,acceso_id,asignado_por_usuario_id) SELECT 1,1,id FROM usuario WHERE perfil='administrador' ORDER BY id LIMIT 1");
+    await cliente.query("INSERT INTO usuario(nombre,nombre_usuario,password_hash,perfil,estacion_id) VALUES ('Operador 1','operador1','!PRUEBA','operador',1),('Operador 2','operador2','!PRUEBA','operador',2)");
     await cliente.query('COMMIT');
     return null;
   } catch (error) { await cliente.query('ROLLBACK'); throw error; }

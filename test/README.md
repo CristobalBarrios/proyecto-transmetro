@@ -33,6 +33,14 @@ Para ver la ejecución de forma interactiva:
 npm.cmd --prefix test run test:e2e:open
 ```
 
+Para repetir solo un archivo durante el diagnóstico, defina `E2E_SPEC` antes de ejecutar. Quite la variable al terminar para volver a ejecutar toda la batería:
+
+```powershell
+$env:E2E_SPEC = 'cypress/e2e/cu-0004-asignacion-operativa.cy.js'
+npm.cmd --prefix test run test:e2e
+Remove-Item Env:E2E_SPEC
+```
+
 La configuración, dependencias, programas de prueba y auxiliares de Cypress están en `test/`. Las pruebas Java permanecen en `src/test/java`, conforme a la estructura Maven.
 
 Los resultados XML están en `test/resultados/` y `target/surefire-reports/`; las capturas de fallos están en `test/cypress/screenshots/`. Esos archivos no se versionan. Conserve los informes de cada evaluación formal junto con su identificador de versión. `test/package-lock.json` sí se versiona para reproducir las dependencias.
@@ -48,7 +56,7 @@ La ejecución es local y explícita. La integración continua queda pendiente de
 
 ## Alcance simplificado
 
-Se conserva una prueba del flujo principal por funcionalidad. No se agrupan todos los escenarios anteriores en una prueba grande: se retiran los escenarios negativos, de límites y de borde. Los catálogos se prueban por separado, uno por entidad. Las nuevas pruebas cubren asignar un guardia, finalizar una asignación, activar una línea preparada, desactivarla y modificar un bus conservando la preparación de una línea operativa. Las validaciones permanecen en la aplicación, pero no se certifican exhaustivamente con este conjunto reducido.
+Se conserva una prueba del flujo principal por funcionalidad. Los catálogos se prueban por separado, uno por entidad. Los recorridos se inician directamente con recursos preparados, sin activar una línea previamente. Las pruebas de eventos cubren su registro y consulta, sin un ciclo de atención o cierre. Las validaciones permanecen en la aplicación, pero no se certifican exhaustivamente con este conjunto reducido.
 
 ## Organización por caso de uso
 
@@ -59,9 +67,9 @@ El identificador `CP-NNNN-XX` relaciona cada prueba con `CU-NNNN`; `XX` es el co
 | `cu-0001-lineas-estaciones.cy.js` | CU-0001 Administrar líneas y estaciones | CP-0001-01 a CP-0001-03 |
 | `cu-0002-flota-parqueos.cy.js` | CU-0002 Administrar flota y parqueos | CP-0002-01 a CP-0002-02 |
 | `cu-0003-personal-seguridad.cy.js` | CU-0003 Administrar personal operativo y seguridad | CP-0003-01 a CP-0003-03 |
-| `cu-0004-asignacion-operativa.cy.js` | CU-0004 Registrar asignación operativa | CP-0004-01 a CP-0004-06 |
+| `cu-0004-asignacion-operativa.cy.js` | CU-0004 Registrar asignación operativa | CP-0004-04 y CP-0004-05 |
 | `cu-0005-ocupacion-alertas.cy.js` | CU-0005 Registrar ocupación y gestionar alertas | CP-0005-01 a CP-0005-04 |
-| `cu-0006-reportes.cy.js` | CU-0006 Consultar reportes operativos | CP-0006-01 a CP-0006-02 |
+| `cu-0006-reportes.cy.js` | CU-0006 Consultar reportes operativos | CP-0006-01 a CP-0006-03 |
 | `cu-0007-accesos-trazabilidad.cy.js` | CU-0007 Administrar accesos y trazabilidad | CP-0007-01 a CP-0007-06 |
 | `cu-0008-datos-referencia.cy.js` | CU-0008 Actualizar datos de referencia | CP-0008-01 a CP-0008-02 |
 

@@ -21,27 +21,13 @@ function operationAction(row, label, action) {
 }
 
 async function refreshOperationPanels() {
-  const [lines, assignments] = await Promise.all([
-    ["administrador", "supervisor", "operador"].includes(sesion.perfil) ? request("/api/operacion/lineas") : [], request("/api/asignaciones-guardias")
-  ]);
-  const body = document.querySelector("#operacion-list");
-  body.replaceChildren();
-  lines.forEach(line => {
-    const row = document.createElement("tr");
-    [line.codigo, line.nombre, line.estado, line.estaciones, line.buses,
-      line.pendientes.join(" ") || "Lista para operar"].forEach(value => operationCell(row, value));
-    const active = line.estado === "operativa";
-    operationAction(row, active ? "Desactivar" : "Activar", () => request(`/api/operacion/lineas/${line.id}/estado`, {
-      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: active ? "inactiva" : "operativa" })
-    }));
-    body.append(row);
-  });
+  const assignments = await request("/api/asignaciones-guardias");
   const history = document.querySelector("#asignaciones-list");
   history.replaceChildren();
   assignments.forEach(item => {
     const row = document.createElement("tr");
     [item.guardia, item.acceso, item.estacion, item.responsable,
-      new Date(item.fechaInicio).toLocaleString("es-GT"), item.fechaFin ? new Date(item.fechaFin).toLocaleString("es-GT") : "-", item.estado]
+      new Date(item.fechaInicio).toLocaleString("es-GT"), item.fechaFin ? new Date(item.fechaFin).toLocaleString("es-GT") : "-", textoCatalogo(item.estado)]
       .forEach(value => operationCell(row, value));
     if (item.estado === "activa") operationAction(row, "Finalizar", () => request(`/api/asignaciones-guardias/${item.id}/finalizar`, { method: "PUT" }));
     else operationCell(row, "Finalizada");

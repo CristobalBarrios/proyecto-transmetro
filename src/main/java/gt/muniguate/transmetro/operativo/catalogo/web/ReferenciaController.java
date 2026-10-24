@@ -2,6 +2,7 @@ package gt.muniguate.transmetro.operativo.catalogo.web;
 
 import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
 import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+import gt.muniguate.transmetro.operativo.catalogo.RegistroRedService;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.*;
@@ -24,8 +25,9 @@ public class ReferenciaController {
     private final TransactionTemplate transacciones;
     private final Validator validacion;
     private final OperacionService operacion;
-    public ReferenciaController(JdbcTemplate datos,UsuarioService usuarios,RutaController rutas,TransactionTemplate transacciones,Validator validacion,OperacionService operacion) {
-        this.datos=datos; this.usuarios=usuarios; this.rutas=rutas; this.transacciones=transacciones; this.validacion=validacion; this.operacion=operacion;
+    private final RegistroRedService registro;
+    public ReferenciaController(JdbcTemplate datos,UsuarioService usuarios,RutaController rutas,TransactionTemplate transacciones,Validator validacion,OperacionService operacion,RegistroRedService registro) {
+        this.datos=datos; this.usuarios=usuarios; this.rutas=rutas; this.transacciones=transacciones; this.validacion=validacion; this.operacion=operacion; this.registro=registro;
     }
     @PostMapping public Map<String,Object> cargar(@Valid @RequestBody Carga s) {
         if(!s.autorizada()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Confirme que la fuente está autorizada.");
@@ -54,12 +56,18 @@ public class ReferenciaController {
                 """,Integer.class,s.municipalidadId(),s.codigo(),s.nombre());
         var secuencia=new ArrayList<RutaController.EstacionRutaSolicitud>();
         for(Estacion e:s.estaciones()) {
+            boolean nueva=!Boolean.TRUE.equals(datos.queryForObject("SELECT EXISTS(SELECT 1 FROM estacion WHERE municipalidad_id=? AND codigo_ruta=?)",Boolean.class,s.municipalidadId(),e.codigoRuta()));
             int id=datos.queryForObject("""
                     INSERT INTO estacion(municipalidad_id,nombre,direccion,zona,codigo_ruta) VALUES (?,?,?,?,?)
                     ON CONFLICT(municipalidad_id,codigo_ruta) DO UPDATE SET nombre=EXCLUDED.nombre,
                     direccion=EXCLUDED.direccion,zona=EXCLUDED.zona RETURNING id
                     """,Integer.class,s.municipalidadId(),e.nombre(),e.direccion(),e.zona(),e.codigoRuta());
+            if(nueva) registro.crearOperador(id,e.operador());
             secuencia.add(new RutaController.EstacionRutaSolicitud(id,e.distanciaKm()));
+        }
+        if(s.busIds()!=null) for(Integer busId:s.busIds()) {
+            if(datos.update("UPDATE bus SET linea_id=? WHERE id=? AND (linea_id IS NULL OR linea_id=?)",linea,busId,linea)!=1)
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"Los buses de la carga deben existir y no pertenecer a otra línea.");
         }
         rutas.guardar(linea,new RutaController.RutaSolicitud(secuencia));
         usuarios.registrar("linea",linea,"cargar_referencia");
@@ -67,8 +75,10 @@ public class ReferenciaController {
     }
     public record Carga(@NotBlank String fuente,boolean autorizada,@NotEmpty List<@NotNull Ruta> rutas) { }
     public record Ruta(@NotNull @Positive Integer municipalidadId,@NotBlank @Size(max=20) String codigo,
-                       @NotBlank @Size(max=120) String nombre,@NotEmpty List<@Valid Estacion> estaciones) { }
+                       @NotBlank @Size(max=120) String nombre,@NotEmpty List<@Valid Estacion> estaciones,
+                       List<@NotNull @Positive Integer> busIds) { }
     public record Estacion(@NotBlank @Size(max=120) String nombre,@NotBlank @Size(max=250) String direccion,
                            @NotNull @Positive Integer zona,@NotBlank @Size(max=30) String codigoRuta,
-                           @NotNull @DecimalMin("0") @Digits(integer=5,fraction=3) BigDecimal distanciaKm) { }
+                           @NotNull @DecimalMin("0") @Digits(integer=5,fraction=3) BigDecimal distanciaKm,
+                           @Valid RegistroRedService.Operador operador) { }
 }

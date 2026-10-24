@@ -70,9 +70,9 @@ public class ReporteController {
                     JOIN estacion e ON e.id=v.estacion_id LEFT JOIN bus b ON b.id=a.bus_refuerzo_id
                     """;
             case "eventos" -> """
-                    SELECT e.id,e.linea_id,e.estacion_id,e.bus_id,e.fecha,e.tipo,e.descripcion,e.estado,
-                    u.nombre_usuario AS registrado_por,c.nombre_usuario AS cerrado_por,e.fecha_cierre FROM evento_operativo e
-                    JOIN usuario u ON u.id=e.usuario_registra_id LEFT JOIN usuario c ON c.id=e.usuario_cierra_id
+                    SELECT e.id,e.linea_id,e.estacion_id,e.bus_id,e.fecha,e.tipo,e.descripcion,
+                    u.nombre_usuario AS registrado_por FROM evento_operativo e
+                    JOIN usuario u ON u.id=e.usuario_registra_id
                     """;
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un reporte disponible.");
         };

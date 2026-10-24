@@ -32,7 +32,7 @@ describe('CU-0005 Registrar ocupación y gestionar alertas', () => {
     cy.registrarVisita(1, 40, 160);
     cy.reload();
     cy.get('[data-route="operacion/alertas"]').click();
-    cy.get('#alertas-list').should('contain', 'pendiente').and('contain', 'Estación A');
+    cy.get('#alertas-list').should('contain', 'Pendiente').and('contain', 'Estación A');
   });
 
   it('CP-0005-04 asigna otro bus para atender la alerta', () => {
@@ -42,6 +42,6 @@ describe('CU-0005 Registrar ocupación y gestionar alertas', () => {
     cy.get('#alertas-list').contains('button', 'Asignar refuerzo').click();
     cy.get('#accion-modal [name=busId]').select('2');
     cy.get('#accion-modal form').submit();
-    cy.get('#alertas-list').should('contain', 'atendida').and('contain', 'BUS-B');
+    cy.get('#alertas-list').should('contain', 'Atendida').and('contain', 'BUS-B');
   });
 });

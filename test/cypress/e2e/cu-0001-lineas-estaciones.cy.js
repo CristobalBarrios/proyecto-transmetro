@@ -4,11 +4,10 @@ describe('CU-0001 Administrar líneas y estaciones', () => {
     cy.get('[data-route="red/rutas"]').click();
     cy.get('#ruta-linea').select('1');
     cy.get('#ruta-editar').click();
-    cy.get('#ruta-agregar').click();
+    cy.get('#ruta-modal').should('have.focus');
     cy.get('.route-editor-row').eq(0).find('select').select('1');
-    cy.get('#ruta-agregar').click();
     cy.get('.route-editor-row').eq(1).find('select').select('2');
-    cy.get('.route-editor-row').eq(1).find('input').type('1.250');
+    cy.get('.route-editor-row').eq(1).find('input').clear().type('1.250').should('have.value', '1.250');
     cy.get('#ruta-form').submit();
     cy.get('#ruta-modal').should('not.be.visible');
     cy.reload();
@@ -17,6 +16,8 @@ describe('CU-0001 Administrar líneas y estaciones', () => {
     cy.get('#ruta-resumen').should('contain', '1.250 km');
   });
   it('CP-0001-01 crea, modifica y conserva una línea', () => {
+    cy.escribirApi('POST', '/api/buses', { placa: 'BUS-NUEVO', capacidadMaxima: 80, parqueoId: 1, estado: 'disponible' });
+    cy.reload();
     cy.get('[data-route="red/lineas"]').click();
     cy.get('#lineas-modal').should('not.be.visible');
     cy.get('#lineas-content').contains('button', 'Nueva línea').click();
@@ -24,6 +25,14 @@ describe('CU-0001 Administrar líneas y estaciones', () => {
     cy.get('#lineas-form [name=municipalidadId]').select('1');
     cy.get('#lineas-form [name=codigo]').type('PRUEBA-2');
     cy.get('#lineas-form [name=nombre]').type('Nueva línea de prueba');
+    cy.get('#lineas-form [name=estacionNombre]').type('Primera estación');
+    cy.get('#lineas-form [name=estacionDireccion]').type('Dirección inicial');
+    cy.get('#lineas-form [name=estacionZona]').type('1');
+    cy.get('#lineas-form [name=estacionCodigoRuta]').type('NUEVA-A');
+    cy.get('#lineas-form [name=busId]').select('3');
+    cy.get('#lineas-form [name=operadorNombre]').type('Operador inicial');
+    cy.get('#lineas-form [name=operadorUsuario]').type('operador.nueva');
+    cy.get('#lineas-form [name=operadorContrasena]').type('Clave-local-2026', { log: false });
     cy.get('#lineas-form').submit();
     cy.get('#lineas-modal').should('have.css', 'display', 'none');
     cy.get('#lineas-list').contains('tr', 'PRUEBA-2').contains('button', 'Editar').click();
@@ -35,6 +44,8 @@ describe('CU-0001 Administrar líneas y estaciones', () => {
     cy.get('#lineas-list').should('contain', 'Línea modificada');
   });
   it('CP-0001-02 crea una estación con todos sus campos', () => {
+    cy.escribirApi('POST', '/api/buses', { placa: 'BUS-ADICIONAL', capacidadMaxima: 80, parqueoId: 1, estado: 'disponible' });
+    cy.reload();
     cy.get('[data-route="red/estaciones"]').click();
     cy.get('#estaciones-content').contains('button', 'Nueva estación').click();
     cy.get('#estaciones-modal').should('have.focus');
@@ -43,6 +54,12 @@ describe('CU-0001 Administrar líneas y estaciones', () => {
     cy.get('#estaciones-form [name=direccion]').type('Dirección C');
     cy.get('#estaciones-form [name=zona]').type('3');
     cy.get('#estaciones-form [name=codigoRuta]').type('PRUEBA-C');
+    cy.get('#estaciones-form [name=lineaId]').select('1');
+    cy.get('#estaciones-form [name=distanciaKm]').type('0.800');
+    cy.get('#estaciones-form [name=busId]').select('3');
+    cy.get('#estaciones-form [name=operadorNombre]').type('Operador C');
+    cy.get('#estaciones-form [name=operadorUsuario]').type('operador.c');
+    cy.get('#estaciones-form [name=operadorContrasena]').type('Clave-local-2026', { log: false });
     cy.get('#estaciones-form').submit();
     cy.get('#estaciones-list').contains('tr', 'Estación C').should('contain', 'Dirección C').and('contain', 'PRUEBA-C');
   });

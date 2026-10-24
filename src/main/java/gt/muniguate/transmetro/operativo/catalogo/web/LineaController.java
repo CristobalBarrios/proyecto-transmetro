@@ -4,6 +4,8 @@ import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
 
 import gt.muniguate.transmetro.operativo.catalogo.domain.Linea;
 import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+import gt.muniguate.transmetro.operativo.catalogo.RegistroRedService;
+import java.math.BigDecimal;
 import org.springframework.transaction.annotation.Transactional;
 import gt.muniguate.transmetro.operativo.catalogo.repository.LineaRepository;
 import jakarta.validation.Valid;
@@ -31,26 +33,32 @@ public class LineaController {
     private final UsuarioService auditoria;
     private final LineaRepository lineas;
     private final OperacionService operacion;
+    private final RegistroRedService registro;
 
-    public LineaController(LineaRepository lineas, OperacionService operacion, UsuarioService auditoria) {
+    public LineaController(LineaRepository lineas, OperacionService operacion, UsuarioService auditoria, RegistroRedService registro) {
         this.auditoria = auditoria;
         this.lineas = lineas;
         this.operacion = operacion;
+        this.registro = registro;
     }
 
     @GetMapping
     public List<LineaRespuesta> listar() {
         return lineas.findAllByOrderByCodigoAsc().stream()
-                .map(linea -> new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre(), linea.getEstado()))
+                .map(linea -> new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre()))
                 .toList();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LineaRespuesta crear(@Valid @RequestBody LineaSolicitud solicitud) {
-        Linea linea = lineas.save(new Linea(solicitud.municipalidadId(), solicitud.codigo(), solicitud.nombre()));
+        operacion.bloquear();
+        if(solicitud.estacionInicial()==null || solicitud.busId()==null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Registre la primera estación, su operador y un bus sin línea asignada.");
+        Linea linea = lineas.saveAndFlush(new Linea(solicitud.municipalidadId(), solicitud.codigo(), solicitud.nombre()));
+        registro.crearEstacion(solicitud.municipalidadId(),solicitud.estacionInicial(),linea.getId(),BigDecimal.ZERO,solicitud.busId());
         auditoria.registrar("linea", linea.getId(), "guardar");
-        return new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre(), linea.getEstado());
+        return new LineaRespuesta(linea.getId(), linea.getMunicipalidadId(), linea.getCodigo(), linea.getNombre());
     }
 
     @PutMapping("/{id}")
@@ -62,15 +70,16 @@ public class LineaController {
         linea.actualizar(solicitud.municipalidadId(), solicitud.codigo(), solicitud.nombre());
         Linea actualizada = lineas.save(linea);
         auditoria.registrar("linea", actualizada.getId(), "guardar");
-        return new LineaRespuesta(actualizada.getId(), actualizada.getMunicipalidadId(), actualizada.getCodigo(), actualizada.getNombre(), actualizada.getEstado());
+        return new LineaRespuesta(actualizada.getId(), actualizada.getMunicipalidadId(), actualizada.getCodigo(), actualizada.getNombre());
     }
 
     public record LineaSolicitud(
             @NotNull @Positive Integer municipalidadId,
             @NotBlank @Size(max = 20) String codigo,
-            @NotBlank @Size(max = 120) String nombre) {
+            @NotBlank @Size(max = 120) String nombre,
+            @Valid RegistroRedService.EstacionInicial estacionInicial, @Positive Integer busId) {
     }
 
-    public record LineaRespuesta(Integer id, Integer municipalidadId, String codigo, String nombre, String estado) {
+    public record LineaRespuesta(Integer id, Integer municipalidadId, String codigo, String nombre) {
     }
 }

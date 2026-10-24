@@ -4,19 +4,25 @@ describe('CU-0007 Administrar accesos y trazabilidad', () => {
     cy.ingresar();
     cy.get('[data-route="administracion/usuarios"]').click();
     cy.get('#usuarios-content').contains('button', 'Nuevo usuario').click();
+    cy.get('#usuarios-modal').should('have.focus');
     cy.get('#usuarios-form [name=nombre]').type('Operador de estación');
     cy.get('#usuarios-form [name=nombreUsuario]').type('operador.estacion');
     cy.get('#usuarios-form [name=contrasena]').type('Clave-local-2026', { log: false });
     cy.get('#usuarios-form [name=perfil]').select('operador');
     cy.get('#usuarios-form [name=estacionId]').select('1');
+    cy.intercept('GET', '/api/bitacora').as('cargaTrasGuardar');
     cy.get('#usuarios-form').submit();
     cy.get('#usuarios-list').should('contain', 'operador.estacion');
-    cy.escribirApi('POST', '/logout');
-    cy.visit('/login');
+    cy.wait('@cargaTrasGuardar');
+    cy.get('#usuarios-modal').should('not.be.visible');
+    cy.get('#cerrar-sesion').click();
+    cy.location('pathname').should('eq', '/login');
     cy.get('#csrf-token').should('not.have.value', '');
     cy.get('[name=username]').type('operador.estacion');
     cy.get('[name=password]').type('Clave-local-2026', { log: false });
     cy.get('#login-form').submit();
+    cy.location('pathname').should('eq', '/');
+    cy.get('#summary-cards .summary-card', { timeout: 15000 }).should('have.length.greaterThan', 0);
     cy.request('/api/sesion').its('body').should('include', { perfil: 'operador', estacionId: 1 });
     cy.get('[data-route="administracion/usuarios"]').should('not.be.visible');
   });
@@ -25,7 +31,7 @@ describe('CU-0007 Administrar accesos y trazabilidad', () => {
     cy.escribirApi('POST', '/api/municipalidades', { nombre: 'Municipalidad auditada' });
     cy.reload();
     cy.get('[data-route="administracion/bitacora"]').click();
-    cy.get('#bitacora-list').should('contain', 'municipalidad').and('contain', 'guardar');
+    cy.get('#bitacora-list').should('contain', 'Municipalidad').and('contain', 'Guardar');
   });
   it('CP-0007-01 permite ingresar con las credenciales de pruebas', () => {
     cy.ingresar();
@@ -34,7 +40,7 @@ describe('CU-0007 Administrar accesos y trazabilidad', () => {
 
   it('CP-0007-02 registra y modifica un acceso', () => {
     cy.ingresar();
-    const datos = { estacionId: 2, codigo: 'ACC-B', descripcion: 'Acceso B' };
+    const datos = { estacionId: 2, codigo: 'ACC-B', descripcion: 'Acceso B', guardiaId: 1 };
     cy.escribirApi('POST', '/api/accesos', datos).then(({ body }) => {
       cy.escribirApi('PUT', `/api/accesos/${body.id}`, datos).its('status').should('eq', 200);
     });
@@ -48,10 +54,10 @@ describe('CU-0007 Administrar accesos y trazabilidad', () => {
     cy.get('[data-route="seguridad/asignaciones"]').click();
     cy.get('#asignacion-nueva').click();
     cy.get('#asignacion-modal').should('have.focus');
-    cy.get('#asignacion-guardia').select('1');
+    cy.get('#asignacion-guardia').select('2');
     cy.get('#asignacion-acceso').select('1');
     cy.get('#asignacion-form').submit();
-    cy.get('#asignaciones-list').should('contain', 'Guardia de prueba').and('contain', 'activa');
+    cy.get('#asignaciones-list').should('contain', 'Guardia de prueba').and('contain', 'Activa');
     cy.env(['username'], { log: false }).then(({ username }) => cy.get('#asignaciones-list').should('contain', username));
     cy.reload();
     cy.request('/api/asignaciones-guardias').its('body.0.fechaInicio').should('be.a', 'string');
@@ -61,11 +67,11 @@ describe('CU-0007 Administrar accesos y trazabilidad', () => {
   it('CP-0007-04 finaliza una asignación y conserva el historial', () => {
     cy.ingresar();
     cy.escribirApi('POST', '/api/guardias', { nombre: 'Guardia de prueba' });
-    cy.escribirApi('POST', '/api/asignaciones-guardias', { guardiaId: 1, accesoId: 1 });
+    cy.escribirApi('POST', '/api/asignaciones-guardias', { guardiaId: 2, accesoId: 1 });
     cy.reload();
     cy.get('[data-route="seguridad/asignaciones"]').click();
-    cy.get('#asignaciones-list').contains('button', 'Finalizar').click();
-    cy.get('#asignaciones-list').should('contain', 'finalizada');
+    cy.get('#asignaciones-list').contains('tr', 'Guardia de prueba').contains('button', 'Finalizar').click();
+    cy.get('#asignaciones-list').should('contain', 'Finalizada');
     cy.reload();
     cy.request('/api/asignaciones-guardias').its('body.0.fechaFin').should('be.a', 'string');
   });

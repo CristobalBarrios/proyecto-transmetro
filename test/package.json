@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test:e2e": "node helpers/ejecutar-e2e.cjs",
-    "test:e2e:open": "node helpers/ejecutar-e2e.cjs --open"
+    "test:e2e:open": "node helpers/ejecutar-e2e.cjs --open",
+    "test:e2e:run": "node helpers/ejecutar-e2e.cjs"
   },
   "devDependencies": {
     "cypress": "^15.21.1",

@@ -20,7 +20,7 @@ class RecorridoControllerTest {
     }
     @Test void CP_0004_04_iniciaRecorrido() {
         var c=controlador();
-        when(operacion.revisar(1)).thenReturn(new OperacionService.Preparacion(1,"L1","Línea","operativa",2,3,List.of()));
+        when(operacion.revisar(1)).thenReturn(new OperacionService.Preparacion(1,"L1","Línea",2,3,List.of()));
         when(datos.queryForObject(anyString(),eq(Boolean.class),eq(1),eq(1))).thenReturn(true);
         when(datos.queryForObject(contains("INSERT INTO recorrido"),eq(Integer.class),eq(1),eq(1),eq(1))).thenReturn(8);
         assertEquals(8,c.iniciar(new RecorridoController.Inicio(1,1,1)).get("id"));

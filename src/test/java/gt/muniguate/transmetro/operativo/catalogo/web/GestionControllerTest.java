@@ -2,6 +2,7 @@ package gt.muniguate.transmetro.operativo.catalogo.web;
 
 import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
 import gt.muniguate.transmetro.operativo.catalogo.OperacionService;
+import gt.muniguate.transmetro.operativo.catalogo.RegistroRedService;
 import jakarta.validation.Validation;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,16 +34,14 @@ class GestionControllerTest {
         var c=new UsuarioController(datos,mock(UsuarioService.class),mock(PasswordEncoder.class),mock(OperacionService.class));
         assertEquals("guardar",c.bitacora().getFirst().get("accion"));
     }
-    @Test void CP_0004_06_registraYAtiendeEvento() {
+    @Test void CP_0006_03_registraEventoParaConsulta() {
         var datos=mock(JdbcTemplate.class);
         var usuarios=mock(UsuarioService.class);
         when(usuarios.actual()).thenReturn(new UsuarioService.Sesion(1,"admin","administrador",null));
         when(datos.queryForObject(contains("INSERT INTO evento_operativo"),eq(Integer.class),eq("Incidencia"),eq("Acceso"),isNull(),eq(1),isNull(),isNull(),eq(1))).thenReturn(4);
-        when(datos.update(contains("UPDATE evento_operativo"),eq("cerrado"),eq("cerrado"),eq(1),eq("cerrado"),eq(4))).thenReturn(1);
         var c=new EventoController(datos,usuarios);
         assertEquals(4,c.crear(new EventoController.Solicitud("Incidencia","Acceso",null,1,null,null)).get("id"));
-        c.estado(4,new EventoController.Estado("cerrado"));
-        verify(usuarios).registrar("evento_operativo",4,"cerrado");
+        verify(usuarios).registrar("evento_operativo",4,"registrar");
     }
     private UsuarioService administrador() {
         var usuario=mock(UsuarioService.class);
@@ -71,8 +70,8 @@ class GestionControllerTest {
         when(datos.queryForObject(contains("INSERT INTO linea"),eq(Integer.class),eq(1),eq("REF"),eq("Referencia"))).thenReturn(3);
         when(datos.queryForObject(contains("INSERT INTO estacion"),eq(Integer.class),eq(1),eq("Estación"),eq("Dirección"),eq(1),eq("REF-A"))).thenReturn(8);
         try(var fabrica=Validation.buildDefaultValidatorFactory()) {
-            var c=new ReferenciaController(datos,usuarios,rutas,tx,fabrica.getValidator(),mock(OperacionService.class));
-            var ruta=new ReferenciaController.Ruta(1,"REF","Referencia",List.of(new ReferenciaController.Estacion("Estación","Dirección",1,"REF-A",BigDecimal.ZERO)));
+            var c=new ReferenciaController(datos,usuarios,rutas,tx,fabrica.getValidator(),mock(OperacionService.class),mock(RegistroRedService.class));
+            var ruta=new ReferenciaController.Ruta(1,"REF","Referencia",List.of(new ReferenciaController.Estacion("Estación","Dirección",1,"REF-A",BigDecimal.ZERO,new RegistroRedService.Operador("Operador","ref.op","clave"))),null);
             var resultado=c.cargar(new ReferenciaController.Carga("Fuente",true,List.of(ruta)));
             assertEquals(List.of(3),resultado.get("aceptados"));
             assertEquals(List.of(),resultado.get("rechazados"));

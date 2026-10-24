@@ -150,7 +150,9 @@ public class CatalogosController {
     @Transactional
     public AccesoRespuesta crearAcceso(@Valid @RequestBody AccesoSolicitud solicitud) {
         operacion.bloquear();
+        if(solicitud.guardiaId()==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione el guardia inicial del acceso.");
         Acceso entidad = accesos.saveAndFlush(new Acceso(solicitud.estacionId(), solicitud.codigo(), solicitud.descripcion()));
+        operacion.asignarGuardiaInicial(entidad.getId(),solicitud.guardiaId(),auditoria.actual().id());
         operacion.validarActivas();
         auditoria.registrar("acceso", entidad.getId(), "guardar");
         return acceso(entidad);
@@ -190,6 +192,6 @@ public class CatalogosController {
     public record GuardiaSolicitud(@NotBlank @Size(max = 150) String nombre, @Size(max = 30) String telefono) { }
     public record GuardiaRespuesta(Integer id, String nombre, String telefono) { }
     public record AccesoSolicitud(@NotNull @Positive Integer estacionId, @NotBlank @Size(max = 30) String codigo,
-                                  @Size(max = 200) String descripcion) { }
+                                  @Size(max = 200) String descripcion, @Positive Integer guardiaId) { }
     public record AccesoRespuesta(Integer id, Integer estacionId, String codigo, String descripcion) { }
 }

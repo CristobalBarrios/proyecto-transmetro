@@ -36,7 +36,6 @@ public class RecorridoController {
         operacion.bloquear();
         var linea = operacion.revisar(s.lineaId());
         operacion.exigirPreparada(linea);
-        if (!"operativa".equals(linea.estado())) throw conflicto("Active la línea antes de iniciar un recorrido.");
         var sesion=usuarios.actual();
         if("operador".equals(sesion.perfil()) && !Boolean.TRUE.equals(datos.queryForObject(
                 "SELECT EXISTS(SELECT 1 FROM linea_estacion WHERE linea_id=? AND estacion_id=?)",Boolean.class,s.lineaId(),sesion.estacionId())))

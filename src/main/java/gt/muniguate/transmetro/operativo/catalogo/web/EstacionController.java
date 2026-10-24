@@ -1,6 +1,10 @@
 package gt.muniguate.transmetro.operativo.catalogo.web;
 
 import gt.muniguate.transmetro.operativo.catalogo.UsuarioService;
+import gt.muniguate.transmetro.operativo.catalogo.RegistroRedService;
+import java.math.BigDecimal;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import org.springframework.transaction.annotation.Transactional;
 
 import gt.muniguate.transmetro.operativo.catalogo.domain.Estacion;
@@ -30,10 +34,12 @@ import java.util.List;
 public class EstacionController {
     private final UsuarioService auditoria;
     private final EstacionRepository estaciones;
+    private final RegistroRedService registro;
 
-    public EstacionController(EstacionRepository estaciones, UsuarioService auditoria) {
+    public EstacionController(EstacionRepository estaciones, UsuarioService auditoria, RegistroRedService registro) {
         this.auditoria = auditoria;
         this.estaciones = estaciones;
+        this.registro = registro;
     }
 
     @GetMapping
@@ -48,15 +54,9 @@ public class EstacionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EstacionRespuesta crear(@Valid @RequestBody EstacionSolicitud solicitud) {
-        Estacion estacion = estaciones.save(new Estacion(
-                solicitud.municipalidadId(),
-                solicitud.nombre(),
-                solicitud.direccion(),
-                solicitud.zona(),
-                solicitud.codigoRuta()));
-        auditoria.registrar("estacion", estacion.getId(), "guardar");
-        return new EstacionRespuesta(estacion.getId(), estacion.getMunicipalidadId(), estacion.getNombre(), estacion.getDireccion(),
-                estacion.getZona(), estacion.getCodigoRuta());
+        var inicial=new RegistroRedService.EstacionInicial(solicitud.nombre(),solicitud.direccion(),solicitud.zona(),solicitud.codigoRuta(),solicitud.operador());
+        int id=registro.crearEstacion(solicitud.municipalidadId(),inicial,solicitud.lineaId(),solicitud.distanciaKm(),solicitud.busId());
+        return new EstacionRespuesta(id,solicitud.municipalidadId(),solicitud.nombre(),solicitud.direccion(),solicitud.zona(),solicitud.codigoRuta());
     }
 
     @PutMapping("/{id}")
@@ -75,7 +75,9 @@ public class EstacionController {
             @NotBlank @Size(max = 120) String nombre,
             @NotBlank @Size(max = 250) String direccion,
             @Min(1) short zona,
-            @NotBlank @Size(max = 30) String codigoRuta) {
+            @NotBlank @Size(max = 30) String codigoRuta,
+            @Positive Integer lineaId, @DecimalMin("0") @Digits(integer=5,fraction=3) BigDecimal distanciaKm,
+            @Positive Integer busId, @Valid RegistroRedService.Operador operador) {
     }
 
     public record EstacionRespuesta(Integer id, Integer municipalidadId, String nombre, String direccion, short zona, String codigoRuta) {

@@ -23,7 +23,7 @@ const gestionResources = [
       { label: "Bus", value: r => r.bus }, { label: "Piloto", value: r => r.piloto },
       { label: "Inicio", value: r => fechaLocal(r.inicio) }, { label: "Fin", value: r => fechaLocal(r.fin) }],
     fields: [
-      { name: "lineaId", label: "Línea operativa", type: "select", reference: "lineas", required: true, filter: r => r.estado === "operativa" },
+      { name: "lineaId", label: "Línea", type: "select", reference: "lineas", required: true },
       { name: "busId", label: "Bus", type: "select", reference: "buses", required: true, filter: r => r.estado === "disponible" },
       { name: "pilotoId", label: "Piloto", type: "select", reference: "pilotos", required: true }
     ],
@@ -60,20 +60,15 @@ const gestionResources = [
     key: "eventos", endpoint: "/api/eventos", container: "#eventos-content", route: "operacion/eventos", icon: "assignment",
     title: "Eventos operativos", singular: "evento", newLabel: "Nuevo evento", allowEdit: false,
     columns: [{ label: "Tipo", value: r => r.tipo }, { label: "Descripción", value: r => r.descripcion },
-      { label: "Estado", value: r => r.estado }, { label: "Línea", value: r => referenceName("lineas", r.linea_id) },
+      { label: "Línea", value: r => referenceName("lineas", r.linea_id) },
       { label: "Estación", value: r => referenceName("estaciones", r.estacion_id) }, { label: "Bus", value: r => referenceName("buses", r.bus_id) },
-      { label: "Registrado por", value: r => r.registrado_por }, { label: "Fecha", value: r => fechaLocal(r.fecha) },
-      { label: "Cerrado por", value: r => r.cerrado_por || "-" }, { label: "Cierre", value: r => fechaLocal(r.fecha_cierre) }],
+      { label: "Registrado por", value: r => r.registrado_por }, { label: "Fecha", value: r => fechaLocal(r.fecha) }],
     fields: [
       { name: "tipo", label: "Tipo", required: true, maxLength: 60 }, { name: "descripcion", label: "Descripción", required: true, maxLength: 500 },
       { name: "lineaId", label: "Línea afectada", type: "select", reference: "lineas", optional: true },
       { name: "estacionId", label: "Estación afectada", type: "select", reference: "estaciones", optional: true },
       { name: "busId", label: "Bus afectado", type: "select", reference: "buses", optional: true },
       { name: "accesoId", label: "Acceso afectado", type: "select", reference: "accesos", optional: true }
-    ],
-    actions: r => r.estado === "cerrado" ? [] : [
-      ...(r.estado === "abierto" ? [{ label: "Atender", run: () => enviarJson(`/api/eventos/${r.id}/estado`, { estado: "en_atencion" }, "PUT") }] : []),
-      { label: "Cerrar", run: () => enviarJson(`/api/eventos/${r.id}/estado`, { estado: "cerrado" }, "PUT") }
     ]
   }
 ];
@@ -148,7 +143,7 @@ function puedeRuta(ruta) {
   if (ruta === "inicio" || ruta === "reportes" || ruta === "operacion/eventos" || ruta === "red/rutas") return true;
   if (ruta === "administracion/bitacora") return ["administrador", "supervisor"].includes(sesion.perfil);
   if (ruta === "red/referencias") return puedeEscribir("lineas");
-  if (ruta === "operacion" || ruta.startsWith("operacion/")) return puedeLeer("recorridos");
+  if (ruta.startsWith("operacion/")) return puedeLeer("recorridos");
   if (ruta === "seguridad/asignaciones") return ["administrador", "supervisor", "seguridad"].includes(sesion.perfil);
   const recurso = resources.find(r => r.route === ruta);
   return recurso ? puedeLeer(recurso.key) : false;
@@ -172,10 +167,12 @@ function crearPantallasGestion() {
       <label>Línea<select name="lineaId"></select></label><label>Estación<select name="estacionId"></select></label><label>Bus<select name="busId"></select></label>
       <button class="button" type="submit">Consultar</button></form><p class="route-summary">Los filtros de fecha y recurso se aplican a recorridos, visitas, alertas y eventos.</p><div id="reportes-list" class="table-responsive"></div></div>`],
     ["red/referencias", `<div class="panel"><div class="panel-heading"><h3>Cargar datos de referencia</h3></div>
-      <form id="referencias-form" class="modal-form"><label>Fuente autorizada<input name="fuente" required></label>
-      <label>Archivo JSON de rutas y estaciones<input name="archivo" type="file" accept=".json,application/json" required></label>
-      <label><input name="autorizada" type="checkbox" required> Confirmo que la fuente está autorizada para esta actualización.</label>
-      <p>El archivo contiene una lista «rutas» con municipalidadId, codigo, nombre y estaciones. Cada estación incluye nombre, direccion, zona, codigoRuta y distanciaKm desde la anterior (cero para la primera).</p>
+      <form id="referencias-form" class="reference-form"><label>Fuente de los datos<input name="fuente" placeholder="Nombre de la institución o del archivo de origen" required></label>
+      <div class="reference-file"><label for="referencias-archivo">Archivo JSON de rutas y estaciones</label>
+      <div class="file-selection"><input id="referencias-archivo" class="visually-hidden" name="archivo" type="file" accept=".json,application/json" required aria-describedby="referencias-nombre">
+      <button id="referencias-seleccionar" class="button button-secondary" type="button">Seleccionar archivo</button><span id="referencias-nombre" aria-live="polite">Ningún archivo seleccionado</span></div></div>
+      <label class="checkbox-label"><input name="autorizada" type="checkbox" required><span>Confirmo que la fuente está autorizada para esta actualización.</span></label>
+      <details class="reference-help"><summary>Formato del archivo</summary><p>El archivo debe contener una lista <code>rutas</code> con <code>municipalidadId</code>, <code>codigo</code>, <code>nombre</code> y <code>estaciones</code>. Cada estación incluye <code>nombre</code>, <code>direccion</code>, <code>zona</code>, <code>codigoRuta</code> y <code>distanciaKm</code> desde la anterior (cero para la primera). Para una estación nueva incluya <code>operador</code> con <code>nombre</code>, <code>usuario</code> y <code>contrasena</code>. Para una línea nueva incluya <code>busIds</code> con suficientes buses existentes sin línea asignada. Las contraseñas de la carga deben mantenerse privadas.</p></details>
       <button class="button" type="submit">Cargar referencias</button></form><p id="referencias-resumen" class="route-summary" role="status"></p><div id="referencias-rechazos" class="table-responsive"></div></div>`]
   ];
   extras.forEach(([ruta, html]) => {
@@ -187,14 +184,11 @@ function crearPantallasGestion() {
     contenido.append(panel);
   });
   const nav = document.querySelector("#app-navigation");
-  const operacion = nav.querySelector('[data-route="operacion"]');
   const grupo = document.createElement("section");
   grupo.className = "nav-group";
   grupo.dataset.group = "operacion";
   grupo.innerHTML = '<button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span>Operación</span><span class="nav-chevron" aria-hidden="true"></span></button><div class="nav-group-items"></div>';
-  nav.insertBefore(grupo, operacion);
-  operacion.lastChild.textContent = "Preparación de líneas";
-  grupo.querySelector(".nav-group-items").append(operacion);
+  nav.append(grupo);
   const enlaces = [
     ["operacion", "operacion/recorridos", "Recorridos", "directions_bus"],
     ["operacion", "operacion/visitas", "Visitas", "location_on"],
@@ -245,12 +239,13 @@ function tablaConsulta(destino, datos) {
   tabla.className = "records-table";
   const head = tabla.createTHead().insertRow();
   const columnas = Object.keys(datos[0]);
-  columnas.forEach(c => { const th = document.createElement("th"); th.textContent = c.replaceAll("_", " "); head.append(th); });
+  columnas.forEach(c => { const th = document.createElement("th"); th.textContent = c === "id" ? "ID" : textoCatalogo(c); head.append(th); });
   const body = tabla.createTBody();
   datos.forEach(r => {
     const fila = body.insertRow();
     columnas.forEach(c => {
       let valor = r[c] ?? "-";
+      if (["estado", "perfil", "accion", "entidad", "tipo"].includes(c)) valor = textoCatalogo(valor);
       if (c.includes("distancia") && typeof valor === "number") valor = valor.toFixed(3);
       if (["fecha", "fecha_cierre", "inicio", "fin", "llegada", "salida", "salida_prevista", "creada", "atendida"].includes(c)) valor = fechaLocal(r[c]);
       operationCell(fila, valor);
@@ -260,6 +255,11 @@ function tablaConsulta(destino, datos) {
 }
 
 function configurarConsultas() {
+  const archivo = document.querySelector('#referencias-form [name=archivo]');
+  document.querySelector('#referencias-seleccionar').onclick = () => archivo.click();
+  archivo.onchange = () => {
+    document.querySelector('#referencias-nombre').textContent = archivo.files[0]?.name || 'Ningún archivo seleccionado';
+  };
   document.querySelector('#reportes-form [name=tipo]').onchange = actualizarFiltrosReportes;
   document.querySelector("#reportes-form").onsubmit = async event => {
     event.preventDefault();

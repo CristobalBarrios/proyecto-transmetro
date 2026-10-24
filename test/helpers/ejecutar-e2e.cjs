@@ -47,6 +47,7 @@ async function main() {
     if (!ready) throw new Error('La aplicación no respondió dentro del plazo.');
     const cypress = require('cypress');
     const options = { project, config: { baseUrl }, env: credentials };
+    if (process.env.E2E_SPEC) options.spec = process.env.E2E_SPEC;
     if (process.argv.includes('--open')) await cypress.open(options);
     else {
       const result = await cypress.run(options);

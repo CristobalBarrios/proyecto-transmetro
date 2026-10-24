@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class PreparacionTest {
-    @Test void compruebaPreparacionCompletaDeLineaOperativa() {
+    @Test void compruebaRecursosDeTodasLasLineas() {
         var datos = mock(JdbcTemplate.class);
         when(datos.queryForList(contains("SELECT codigo"), eq(1))).thenReturn(List.of(Map.of("codigo", "L1", "nombre", "Línea", "estado", "operativa")));
-        when(datos.queryForList(contains("estado = 'operativa'"), eq(Integer.class))).thenReturn(List.of(1));
-        when(datos.queryForObject(anyString(), eq(Integer.class), eq(1))).thenReturn(2, 3, 0, 0, 0);
+        when(datos.queryForList(contains("SELECT id FROM linea ORDER BY id"), eq(Integer.class))).thenReturn(List.of(1));
+        when(datos.queryForObject(anyString(), eq(Integer.class), eq(1))).thenReturn(2, 3, 0, 0);
         assertDoesNotThrow(() -> new OperacionService(datos).validarActivas());
-        verify(datos, times(5)).queryForObject(anyString(), eq(Integer.class), eq(1));
+        verify(datos, times(4)).queryForObject(anyString(), eq(Integer.class), eq(1));
     }
 }

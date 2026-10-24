@@ -15,6 +15,22 @@ describe('CU-0006 Consultar reportes operativos', () => {
     cy.get('#reportes-list').should('contain', 'BUS-A');
   });
 
+  it('CP-0006-03 registra un evento para su consulta', () => {
+    cy.intercept('POST', '/api/eventos').as('crearEvento');
+    cy.get('[data-route="operacion/eventos"]').click();
+    cy.get('#eventos-content').contains('button', 'Nuevo evento').click();
+    cy.get('#eventos-modal').should('have.focus');
+    cy.get('#eventos-form [name=tipo]').type('Incidencia');
+    cy.get('#eventos-form [name=descripcion]').type('Revisión de acceso');
+    cy.get('#eventos-form [name=estacionId]').select('1');
+    cy.get('#eventos-form button[type=submit]').click();
+    cy.wait('@crearEvento').its('response.statusCode').should('eq', 201);
+    cy.get('#eventos-modal').should('not.be.visible');
+    cy.get('#eventos-list').should('contain', 'Revisión de acceso');
+    cy.reload();
+    cy.get('#eventos-list').should('contain', 'Revisión de acceso');
+  });
+
   it('CP-0006-02 filtra los reportes operativos por período y línea', () => {
     cy.escribirApi('POST', '/api/eventos', { tipo: 'Prueba', descripcion: 'Evento de reporte', lineaId: 1 });
     cy.reload();

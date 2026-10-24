@@ -40,7 +40,6 @@
           <button class="nav-group-toggle" type="button" aria-expanded="true"><span class="nav-group-name"><span class="material-symbols-outlined" aria-hidden="true">settings</span>Administración</span><span class="nav-chevron" aria-hidden="true"></span></button>
           <div class="nav-group-items"><a href="#/administracion/municipalidades" data-route="administracion/municipalidades" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Municipalidades</a></div>
         </section>
-        <a href="#/operacion" data-route="operacion" class="side-link"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span>Operación</a>
       </nav>
     </aside>
     <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Cerrar menú"></button>
@@ -68,13 +67,7 @@
       <section class="view-panel" data-view="seguridad/asignaciones" hidden>
         <div class="panel"><div class="panel-heading panel-heading-actions"><h3>Asignaciones de guardias</h3><button id="asignacion-nueva" class="button button-add" type="button">Nueva asignación</button></div>
           <div class="table-responsive"><table class="records-table"><thead><tr><th>Guardia</th><th>Acceso</th><th>Estación</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="asignaciones-list"></tbody></table></div>
-          <p class="route-summary">Para reemplazar un guardia de una línea operativa, asigne primero el reemplazo y luego finalice la asignación anterior.</p>
-        </div>
-      </section>
-      <section class="view-panel" data-view="operacion" hidden>
-        <div class="panel"><div class="panel-heading"><h3>Preparación de líneas</h3></div>
-          <p class="route-summary">Configure la ruta, los buses y la cobertura de todos los accesos antes de activar una línea. Para cambiar su preparación, puede desactivarla mientras no tenga recorridos en curso.</p>
-          <div class="table-responsive"><table class="records-table"><thead><tr><th>Código</th><th>Línea</th><th>Estado</th><th>Estaciones</th><th>Buses</th><th>Preparación</th><th>Acciones</th></tr></thead><tbody id="operacion-list"></tbody></table></div>
+          <p class="route-summary">Si hay recorridos en curso, asigne primero el reemplazo y luego finalice la asignación anterior para mantener la cobertura.</p>
         </div>
       </section>
       </div>

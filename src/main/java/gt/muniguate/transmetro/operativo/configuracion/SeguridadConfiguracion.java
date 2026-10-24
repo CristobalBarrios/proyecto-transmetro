@@ -27,7 +27,7 @@ public class SeguridadConfiguracion {
                         .requestMatchers("/api/usuarios/**").hasRole("administrador")
                         .requestMatchers("/api/bitacora").hasAnyRole("administrador", "supervisor")
                         .requestMatchers("/api/referencias/**").hasAnyRole("administrador", "supervisor", "estaciones")
-                        .requestMatchers("/api/recorridos/**", "/api/visitas/**", "/api/alertas/**", "/api/operacion/**")
+                        .requestMatchers("/api/recorridos/**", "/api/visitas/**", "/api/alertas/**")
                         .hasAnyRole("administrador", "supervisor", "operador")
                         .requestMatchers(HttpMethod.GET, "/api/pilotos/**", "/api/educacion-pilotos/**")
                         .hasAnyRole("administrador", "supervisor", "personal", "operador", "flota")

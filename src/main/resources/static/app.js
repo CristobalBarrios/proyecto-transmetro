@@ -1,6 +1,11 @@
 const notice = document.querySelector("#notice");
 let csrfToken;
 const recordsByKey = {};
+function textoCatalogo(valor) {
+  if (valor === null || valor === undefined) return "-";
+  const texto = String(valor).replaceAll("_", " ");
+  return texto ? texto[0].toLocaleUpperCase("es-GT") + texto.slice(1) : texto;
+}
 const routes = {
   inicio: { title: "Inicio", breadcrumb: "Inicio" },
   "red/lineas": { title: "Líneas", breadcrumb: "Red / Líneas" },
@@ -14,7 +19,6 @@ const routes = {
   "seguridad/guardias": { title: "Guardias", breadcrumb: "Seguridad / Guardias" },
   "seguridad/asignaciones": { title: "Asignaciones de guardias", breadcrumb: "Seguridad / Asignaciones" },
   "administracion/municipalidades": { title: "Municipalidades", breadcrumb: "Administración / Municipalidades" },
-  operacion: { title: "Preparación de líneas", breadcrumb: "Operación / Preparación" },
   "operacion/recorridos": { title: "Recorridos", breadcrumb: "Operación / Recorridos" },
   "operacion/visitas": { title: "Visitas de estaciones", breadcrumb: "Operación / Visitas" },
   "operacion/alertas": { title: "Alertas", breadcrumb: "Operación / Alertas" },
@@ -56,13 +60,20 @@ const resources = [
     columns: [
       { label: "Código", value: record => record.codigo },
       { label: "Nombre", value: record => record.nombre },
-      { label: "Municipalidad", value: record => referenceName("municipalidades", record.municipalidadId) },
-      { label: "Estado", value: record => record.estado }
+      { label: "Municipalidad", value: record => referenceName("municipalidades", record.municipalidadId) }
     ],
     fields: [
       { name: "municipalidadId", label: "Municipalidad", type: "select", reference: "municipalidades", required: true },
       { name: "codigo", label: "Código", required: true, maxLength: 20, placeholder: "LÍNEA-02" },
-      { name: "nombre", label: "Nombre", required: true, maxLength: 120, placeholder: "Nombre de la línea" }
+      { name: "nombre", label: "Nombre", required: true, maxLength: 120, placeholder: "Nombre de la línea" },
+      { name: "estacionNombre", label: "Primera estación — Nombre", required: true, maxLength: 120, createOnly: true },
+      { name: "estacionDireccion", label: "Primera estación — Dirección", required: true, maxLength: 250, createOnly: true },
+      { name: "estacionZona", label: "Primera estación — Zona", type: "number", min: 1, required: true, createOnly: true },
+      { name: "estacionCodigoRuta", label: "Primera estación — Código", required: true, maxLength: 30, createOnly: true },
+      { name: "busId", label: "Bus inicial (sin línea asignada)", type: "select", reference: "buses", filter: r => !r.lineaId, required: true, createOnly: true },
+      { name: "operadorNombre", label: "Operador inicial — Nombre", required: true, maxLength: 150, createOnly: true },
+      { name: "operadorUsuario", label: "Operador inicial — Usuario nuevo", required: true, maxLength: 60, createOnly: true },
+      { name: "operadorContrasena", label: "Operador inicial — Contraseña", type: "password", required: true, maxLength: 72, createOnly: true }
     ]
   },
   {
@@ -80,7 +91,13 @@ const resources = [
       { name: "nombre", label: "Nombre", required: true, maxLength: 120, placeholder: "Estación Central" },
       { name: "direccion", label: "Dirección", required: true, maxLength: 250, placeholder: "Dirección de la estación" },
       { name: "zona", label: "Zona", type: "number", required: true, min: 1, placeholder: "1" },
-      { name: "codigoRuta", label: "Código de ruta", required: true, maxLength: 30, placeholder: "LÍNEA-02-A" }
+      { name: "codigoRuta", label: "Código de ruta", required: true, maxLength: 30, placeholder: "LÍNEA-02-A" },
+      { name: "lineaId", label: "Línea a la que se agrega", type: "select", reference: "lineas", required: true, createOnly: true },
+      { name: "distanciaKm", label: "Distancia desde la última estación (km)", type: "number", min: 0.001, step: 0.001, required: true, createOnly: true },
+      { name: "busId", label: "Bus adicional si hace falta para conservar el mínimo", type: "select", reference: "buses", filter: r => !r.lineaId, optional: true, createOnly: true },
+      { name: "operadorNombre", label: "Operador inicial — Nombre", required: true, maxLength: 150, createOnly: true },
+      { name: "operadorUsuario", label: "Operador inicial — Usuario nuevo", required: true, maxLength: 60, createOnly: true },
+      { name: "operadorContrasena", label: "Operador inicial — Contraseña", type: "password", required: true, maxLength: 72, createOnly: true }
     ]
   },
   {
@@ -140,7 +157,8 @@ const resources = [
     fields: [
       { name: "estacionId", label: "Estación", type: "select", reference: "estaciones", required: true },
       { name: "codigo", label: "Código", required: true, maxLength: 30, placeholder: "ACC-01" },
-      { name: "descripcion", label: "Descripción", maxLength: 200, placeholder: "Acceso norte", optional: true }
+      { name: "descripcion", label: "Descripción", maxLength: 200, placeholder: "Acceso norte", optional: true },
+      { name: "guardiaId", label: "Guardia inicial del acceso", type: "select", reference: "guardias", required: true, createOnly: true }
     ]
   },
   {
@@ -256,6 +274,7 @@ function createField(resource, field) {
   if (field.maxLength) control.maxLength = field.maxLength;
   if (field.min !== undefined) control.min = field.min;
   if (field.max) control.max = field.max;
+  if (field.step) control.step = field.step;
   if (field.placeholder) control.placeholder = field.placeholder;
   control.dataset.resource = resource.key;
   label.append(control);
@@ -312,7 +331,7 @@ function populateSelects() {
       }
       const options = field.reference
         ? (recordsByKey[field.reference] || []).filter(record => !field.filter || field.filter(record)).filter(record => field.reference !== "estaciones" || !["visitas","eventos"].includes(resource.key) || sesion.perfil !== "operador" || record.id === sesion.estacionId).map(record => ({ value: record.id, label: optionLabel(field.reference, record) }))
-        : field.options.map(value => ({ value, label: value.replaceAll("_", " ") }));
+        : field.options.map(value => ({ value, label: field.boolean ? (value === "true" ? "Sí" : "No") : textoCatalogo(value) }));
       options.forEach(option => {
         const element = document.createElement("option");
         element.value = option.value;
@@ -356,7 +375,8 @@ function renderResource(resource) {
     const row = document.createElement("tr");
     resource.columns.forEach(column => {
       const cell = document.createElement("td");
-      cell.textContent = column.value(record);
+      const valor = column.value(record);
+      cell.textContent = ["Estado", "Perfil", "Tipo"].includes(column.label) ? textoCatalogo(valor) : valor;
       row.append(cell);
     });
     const actions = document.createElement("td");
@@ -388,7 +408,11 @@ function openForm(resource, record = null) {
   resetForm(resource);
   if (record) {
     form.dataset.recordId = record.id;
-    resource.fields.forEach(field => { form.elements[field.name].value = record[field.name] ?? ""; });
+    resource.fields.forEach(field => {
+      const control = form.elements[field.name];
+      control.value = record[field.name] ?? "";
+      if(field.createOnly) { control.closest('label').hidden = true; control.disabled = true; control.required = false; }
+    });
     document.querySelector(`#${resource.key}-form-title`).textContent = `Modificar ${resource.singular}`;
     form.querySelector("button[type='submit']").textContent = "Guardar cambios";
   }
@@ -400,6 +424,8 @@ function resetForm(resource) {
   form.reset();
   delete form.dataset.recordId;
   resource.fields.forEach(field => {
+    const control = form.elements[field.name];
+    if(field.createOnly) { control.closest('label').hidden = false; control.disabled = false; control.required = Boolean(field.required); }
     if (field.defaultValue) form.elements[field.name].value = field.defaultValue;
   });
   document.querySelector(`#${resource.key}-form-title`).textContent = resource.newLabel;
@@ -411,10 +437,20 @@ async function saveResource(event, resource) {
   const form = event.currentTarget;
   const payload = {};
   resource.fields.forEach(field => {
+    if(form.elements[field.name].disabled) return;
     const raw = form.elements[field.name].value.trim();
     payload[field.name] = valorCampo(field, raw);
   });
   const id = form.dataset.recordId;
+  if(!id && ["lineas", "estaciones"].includes(resource.key)) {
+    const operador = { nombre: payload.operadorNombre, usuario: payload.operadorUsuario, contrasena: payload.operadorContrasena };
+    delete payload.operadorNombre; delete payload.operadorUsuario; delete payload.operadorContrasena;
+    if(resource.key === "lineas") {
+      payload.estacionInicial = { nombre: payload.estacionNombre, direccion: payload.estacionDireccion,
+        zona: payload.estacionZona, codigoRuta: payload.estacionCodigoRuta, operador };
+      delete payload.estacionNombre; delete payload.estacionDireccion; delete payload.estacionZona; delete payload.estacionCodigoRuta;
+    } else payload.operador = operador;
+  }
   try {
     await request(id ? `${resource.endpoint}/${id}` : resource.endpoint, {
       method: id ? "PUT" : "POST",
@@ -501,7 +537,7 @@ async function iniciarAplicacion() {
     document.querySelectorAll("[data-route]").forEach(link => { link.hidden = !puedeRuta(link.dataset.route); });
     document.querySelector("#ruta-editar").hidden = !puedeEscribir("lineas");
     document.querySelector("#asignacion-nueva").hidden = !["administrador", "supervisor", "seguridad"].includes(sesion.perfil);
-    document.querySelector(".session-status").textContent = `${sesion.nombreUsuario} · ${sesion.perfil}`;
+    document.querySelector(".session-status").textContent = `${sesion.nombreUsuario} · ${textoCatalogo(sesion.perfil)}`;
     document.querySelector("#cerrar-sesion").onclick = async () => {
       const token = await getCsrfToken();
       await fetch("/logout", { method: "POST", credentials: "same-origin", headers: { [token.encabezado]: token.valor } });

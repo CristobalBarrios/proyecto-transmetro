@@ -17,11 +17,10 @@ class RutaControllerTest {
     static class Datos extends JdbcTemplate {
         boolean enCurso;
         boolean existeEstacion = true;
-        String estado = "borrador";
         int buses = 2;
         int escrituras;
         List<Object[]> inserciones = new ArrayList<>();
-        @Override public <T> List<T> queryForList(String sql, Class<T> tipo, Object... args) { return List.of(tipo.cast(estado)); }
+        @Override public <T> List<T> queryForList(String sql, Class<T> tipo, Object... args) { return List.of(tipo.cast(1)); }
         @Override public <T> T queryForObject(String sql, Class<T> tipo, Object... args) {
             Object valor = sql.contains("recorrido") ? enCurso : sql.contains("count(*)") ? buses
                     : sql.contains("FROM estacion") ? existeEstacion : true;

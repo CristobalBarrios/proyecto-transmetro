@@ -43,13 +43,14 @@ public class RutaController {
                                                @Valid @RequestBody RutaSolicitud solicitud) {
         operacion.bloquear();
         // Bloquea la línea para guardar toda la secuencia como una sola operación.
-        var estados = datos.queryForList("SELECT estado FROM linea WHERE id = ? FOR UPDATE", String.class, lineaId);
-        if (estados.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Línea no encontrada.");
+        var lineas = datos.queryForList("SELECT id FROM linea WHERE id = ? FOR UPDATE", Integer.class, lineaId);
+        if (lineas.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Línea no encontrada.");
         if (Boolean.TRUE.equals(datos.queryForObject(
                 "SELECT EXISTS (SELECT 1 FROM recorrido WHERE linea_id = ? AND fin IS NULL)", Boolean.class, lineaId))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede cambiar la ruta con recorridos en curso.");
         }
         var identificadores = new HashSet<Integer>();
+        var anteriores = datos.queryForList("SELECT estacion_id FROM linea_estacion WHERE linea_id=?", Integer.class, lineaId);
         for (int indice = 0; indice < solicitud.estaciones().size(); indice++) {
             var estacion = solicitud.estaciones().get(indice);
             if (!identificadores.add(estacion.estacionId())) {
@@ -65,20 +66,13 @@ public class RutaController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La estación seleccionada no existe.");
             }
         }
-        if ("operativa".equals(estados.getFirst())) {
-            int cantidad = solicitud.estaciones().size();
-            Integer buses = datos.queryForObject("SELECT count(*) FROM bus WHERE linea_id = ?", Integer.class, lineaId);
-            if (cantidad == 0 || buses < cantidad || buses > cantidad * 2) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Una línea operativa necesita entre uno y dos buses por estación.");
-            }
-        }
         datos.update("DELETE FROM linea_estacion WHERE linea_id = ?", lineaId);
         for (int indice = 0; indice < solicitud.estaciones().size(); indice++) {
             var estacion = solicitud.estaciones().get(indice);
             datos.update("INSERT INTO linea_estacion (linea_id, estacion_id, orden, distancia_desde_anterior_km) VALUES (?, ?, ?, ?)",
                     lineaId, estacion.estacionId(), indice + 1, estacion.distanciaKm());
         }
+        for(Integer estacionId:anteriores) operacion.exigirEstacionConLinea(estacionId);
         operacion.validarActivas();
         auditoria.registrar("linea", lineaId, "configurar_ruta");
         return listar(lineaId);
